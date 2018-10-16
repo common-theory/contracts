@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { observable } from 'mobx';
 import App from './App';
 import Web3  from 'web3';
 
@@ -10,7 +11,11 @@ if (typeof web3 !== 'undefined') {
   web3 = new Web3(new Web3.providers.HttpProvider("http://192.168.1.200:8545"));
 }
 
+const AppState = observable({
+  web3
+});
+
 ReactDOM.render(
-  React.createElement(App),
+  <App appState={AppState} />,
   document.getElementById('app')
 );

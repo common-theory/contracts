@@ -56,7 +56,7 @@ contract CommonDAC {
     bool accept
   );
 
-  event ProposalAccepted(
+  event ProposalApplied(
     uint proposalNumber
   );
 
@@ -149,15 +149,29 @@ contract CommonDAC {
   function applyProposal(uint proposalNumber) public {
     require(isProposalAccepted(proposalNumber));
     if (proposalVotes[proposalNumber].applied) return;
-    
+
+    // Update the member
     if (proposals[proposalNumber].updateMember) {
-      members[proposals[proposalNumber].memberAddress].ownership = proposals[proposalNumber].newOwnership;
+      uint oldOwnership = members[proposals[proposalNumber].memberAddress].ownership;
+      uint newOwnership = proposals[proposalNumber].newOwnership;
+      if (oldOwnership != 0 && newOwnership == 0) {
+        // A voting member is being removed
+        totalVotingMembers -= 1;
+      } else if (oldOwnership == 0 && newOwnership != 0) {
+        // A voting member is being added
+        totalVotingMembers += 1;
+      }
+      totalOwnership = totalOwnership - oldOwnership + newOwnership;
+      members[proposals[proposalNumber].memberAddress].ownership = newOwnership;
     }
+
+    // Update the contract address if necessary
     if (proposals[proposalNumber].updateContract) {
       contractUpdated = true;
       newContract = proposals[proposalNumber].newContractAddress;
     }
     proposalVotes[proposalNumber].applied = true;
+    emit ProposalApplied(proposalNumber);
   }
 
   /**

@@ -33,6 +33,7 @@ module.exports = {
   ],
   devServer: {
     contentBase: path.join(__dirname, 'static'),
-    publicPath: '/'
+    publicPath: '/',
+    compress: true
   }
 };

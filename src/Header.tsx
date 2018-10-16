@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { observer } from "mobx-react"
-import AppStore from './AppStore';
+import { observer, inject } from 'mobx-react';
 
 const HeaderBackground = styled.div`
   width: 100%;
@@ -14,16 +13,17 @@ const LogoText = styled.span`
   font-family: Helvetica;
 `;
 
+@inject('appStore')
 @observer
 export default class Header extends React.Component {
   componentDidMount() {
-    AppStore.loadNetworkId();
+    this.props.appStore.loadNetworkId();
   }
 
   render() {
     return (
       <HeaderBackground>
-        <LogoText>Common Theory: NetworkID {AppStore.networkId}</LogoText>
+        <LogoText>Common Theory: NetworkID {this.props.appStore.networkId}</LogoText>
       </HeaderBackground>
     );
   }

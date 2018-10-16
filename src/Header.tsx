@@ -3,14 +3,20 @@ import styled from 'styled-components';
 
 const HeaderBackground = styled.div`
   width: 100%;
+  padding: 8px;
   background-color: #00F;
+`;
+
+const LogoText = styled.span`
+  color: white;
+  font-family: Helvetica;
 `;
 
 export default class Header extends React.Component {
   render() {
     return (
       <HeaderBackground>
-        <div>Common Theory</div>
+        <LogoText>Common Theory</LogoText>
       </HeaderBackground>
     );
   }

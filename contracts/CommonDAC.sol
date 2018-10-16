@@ -126,6 +126,8 @@ contract CommonDAC {
 
     memberProposalVotes[msg.sender][proposalNumber] = true;
 
+    emit MemberVote(msg.sender, proposalNumber, accept);
+
     if (isProposalAccepted(proposalNumber)) {
       applyProposal(proposalNumber);
     }

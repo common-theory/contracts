@@ -10,7 +10,7 @@ module.exports = {
       network_id: '*'
     },
     rinkeby: {
-      provider: new PrivateKeyProvider(rinkebyKey, 'http://rinkeby.commontheory.io:4545'),
+      provider: new PrivateKeyProvider(rinkebyKey, 'http://local.commontheory.io:8545'),
       network_id: '4'
     },
     live: {

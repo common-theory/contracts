@@ -99,6 +99,7 @@ contract CommonDAC {
     });
     memberAddresses.push(addr);
     totalVotingMembers += 1;
+    totalOwnership += 1000;
     genesisBlockTimestamp = block.timestamp;
   }
 

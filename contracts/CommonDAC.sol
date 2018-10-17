@@ -12,8 +12,8 @@ pragma solidity ^0.4.23;
  **/
 
 contract CommonDAC {
-  uint totalVotingMembers = 0;
-  uint totalOwnership = 0;
+  uint public totalVotingMembers = 0;
+  uint public totalOwnership = 0;
   /**
    * A member is an entity that has a right to ownership/totalOwnership of all
    * funds sent to this contract.
@@ -61,7 +61,7 @@ contract CommonDAC {
   );
 
   mapping (address => Member) public members;
-  address[] memberAddresses;
+  address[] public memberAddresses;
   mapping (address => Vote[]) public votes;
   mapping (address => mapping (uint => bool)) public memberProposalVotes;
 
@@ -73,14 +73,14 @@ contract CommonDAC {
    * This is not mutable in this contract, but can be included in proposals in
    * a subsequent version of this DAC.
    **/
-  uint votePeriod = 60;
-  uint genesisBlockTimestamp;
+  uint public votePeriod = 60;
+  uint public genesisBlockTimestamp;
 
   Proposal[] public proposals;
   ProposalVoteState[] public proposalVotes;
 
-  bool contractUpdated = false;
-  address newContract;
+  bool public contractUpdated = false;
+  address public newContract;
 
   struct Payment {
     address sender;
@@ -88,7 +88,7 @@ contract CommonDAC {
     bool settled;
   }
 
-  Payment[] payments;
+  Payment[] public payments;
 
   constructor(string name, string github, string website, address addr) public {
     members[addr] = Member({

@@ -1,5 +1,5 @@
 const CommonDAC = artifacts.require('CommonDAC');
 
 module.exports = function(deployer) {
-  deployer.deploy(CommonDAC, 'Chance Hudson', 'jchancehud', 'commontheory.io', '0xddeC6C333538fCD3de7cfB56D6beed7Fd8dEE604');
+  deployer.deploy(CommonDAC, 'Chance Hudson', 'jchancehud', 'commontheory.io', '0xAb027372B1c52e1615EDdeF59C3Ca4412bf63b9f');
 };

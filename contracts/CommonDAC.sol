@@ -71,7 +71,7 @@ contract CommonDAC {
    * This is not mutable in this contract, but can be included in proposals in
    * a subsequent version of this DAC.
    **/
-  uint public votePeriod = 60;
+  uint public votePeriod = 60 * 30;
   uint public genesisBlockTimestamp;
 
   Proposal[] public proposals;

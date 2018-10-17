@@ -90,14 +90,14 @@ contract CommonDAC {
 
   Payment[] payments;
 
-  constructor(string name, string github, string website) public {
-    members[msg.sender] = Member({
+  constructor(string name, string github, string website, address addr) public {
+    members[addr] = Member({
       ownership: 1000,
       name: name,
       github: github,
       website: website
     });
-    memberAddresses.push(msg.sender);
+    memberAddresses.push(addr);
     totalVotingMembers += 1;
     genesisBlockTimestamp = block.timestamp;
   }

@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rm -rf build",
     "build": "npm run clean && truffle compile",
-    "deploy:dev": "npm run clean && truffle migrate",
+    "deploy:dev": "npm run clean && truffle migrate --network development",
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -36,11 +36,9 @@ contract CommonDAC {
     uint newOwnership;
     address newContractAddress;
     bool updateContract;
-  }
 
-  struct ProposalVoteState {
-    uint totalAccepting;
-    uint totalRejecting;
+    uint totalAcceptingVotes;
+    uint totalRejectingVotes;
     bool applied;
   }
 
@@ -77,7 +75,6 @@ contract CommonDAC {
   uint public genesisBlockTimestamp;
 
   Proposal[] public proposals;
-  ProposalVoteState[] public proposalVotes;
 
   bool public contractUpdated = false;
   address public newContract;
@@ -187,9 +184,9 @@ contract CommonDAC {
     }));
 
     if (accept) {
-      proposalVotes[proposalNumber].totalAccepting += 1;
+      proposals[proposalNumber].totalAcceptingVotes += 1;
     } else {
-      proposalVotes[proposalNumber].totalRejecting += 1;
+      proposals[proposalNumber].totalRejectingVotes += 1;
     }
 
     memberProposalVotes[msg.sender][proposalNumber] = true;
@@ -207,10 +204,10 @@ contract CommonDAC {
    * Proposals must have 0 rejections, and at least 75% voting participation.
    **/
   function isProposalAccepted(uint proposalNumber) public view returns (bool) {
-    if (proposalVotes[proposalNumber].totalRejecting > 0) {
+    if (proposals[proposalNumber].totalRejectingVotes > 0) {
       return false;
     }
-    return proposalVotes[proposalNumber].totalAccepting > 75 * totalVotingMembers / 100;
+    return proposals[proposalNumber].totalAcceptingVotes > 75 * totalVotingMembers / 100;
   }
 
   /**
@@ -218,7 +215,7 @@ contract CommonDAC {
    **/
   function applyProposal(uint proposalNumber) public {
     require(isProposalAccepted(proposalNumber));
-    if (proposalVotes[proposalNumber].applied) return;
+    if (proposals[proposalNumber].applied) return;
 
     // Update the member
     if (proposals[proposalNumber].updateMember) {
@@ -241,7 +238,7 @@ contract CommonDAC {
       contractUpdated = true;
       newContract = proposals[proposalNumber].newContractAddress;
     }
-    proposalVotes[proposalNumber].applied = true;
+    proposals[proposalNumber].applied = true;
     emit ProposalApplied(proposalNumber);
   }
 
@@ -258,13 +255,22 @@ contract CommonDAC {
       memberAddress: memberAddress,
       newOwnership: newOwnership,
       newContractAddress: newContractAddress,
-      updateContract: updateContract
-    }));
-    proposalVotes.push(ProposalVoteState({
-      totalAccepting: 0,
-      totalRejecting: 0,
+      updateContract: updateContract,
+      totalAcceptingVotes: 0,
+      totalRejectingVotes: 0,
       applied: false
     }));
+  }
+
+  /**
+   * Public getters for array lengths
+   **/
+  function proposalCount() public view returns (uint) {
+    return proposals.length;
+  }
+
+  function paymentCount() public view returns (uint) {
+    return payments.length;
   }
 
   /**

@@ -247,7 +247,7 @@ contract CommonDAC {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(bool updateMember, address memberAddress, uint newOwnership, address newContractAddress, bool updateContract) public canVote {
+  function createProposal(bool updateMember, address memberAddress, uint newOwnership, address newContractAddress, bool updateContract) public {
     proposals.push(Proposal({
       number: proposals.length,
       voteCycle: currentVoteCycle() + 1,
@@ -271,6 +271,10 @@ contract CommonDAC {
 
   function paymentCount() public view returns (uint) {
     return payments.length;
+  }
+
+  function memberAddressCount() public view returns (uint) {
+    return memberAddresses.length;
   }
 
   /**

@@ -7,12 +7,14 @@
     "clean": "rm -rf build",
     "build": "npm run clean && truffle compile",
     "deploy:dev": "npm run clean && truffle migrate",
+    "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Chance Hudson",
   "license": "MIT",
   "devDependencies": {
-    "truffle": "^4.1.14"
+    "truffle": "^4.1.14",
+    "truffle-privatekey-provider": "^0.1.0"
   },
   "dependencies": {}
 }

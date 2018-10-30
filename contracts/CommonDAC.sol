@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 /**
  * A simple payment routing contract for people looking to work together. Any
  * funds sent to this contract are distributed to members based on their ratio
- * of ownership vs the total amount of ownership in existence.
+ * of value vs the total amount of value in the contract.
  *
  * Changes to members can be proposed and are voted on every 2 weeks.
  *
@@ -13,19 +13,17 @@ pragma solidity ^0.4.23;
 
 contract CommonDAC {
   uint public totalVotingMembers = 0;
-  uint public totalOwnership = 0;
+  uint public totalValue = 0;
   /**
-   * A member is an entity that has a right to ownership/totalOwnership of all
+   * A member is an entity that has a right to value/totalOwnership of all
    * funds sent to this contract.
    *
    * The extra fields are optional, and only used for user interfaces that may
    * consume the data.
    **/
   struct Member {
-    uint ownership;
-    string name;
-    string github;
-    string website;
+    uint value;
+    string link;
   }
 
   struct Proposal {
@@ -33,7 +31,7 @@ contract CommonDAC {
     uint voteCycle;
     bool updateMember;
     address memberAddress;
-    uint newOwnership;
+    uint newValue;
     address newContractAddress;
     bool updateContract;
 
@@ -87,16 +85,14 @@ contract CommonDAC {
 
   Payment[] public payments;
 
-  constructor(string name, string github, string website, address addr) public {
+  constructor(string _link, address addr) public {
     members[addr] = Member({
-      ownership: 1000,
-      name: name,
-      github: github,
-      website: website
+      value: 1000,
+      link: _link
     });
     memberAddresses.push(addr);
     totalVotingMembers += 1;
-    totalOwnership += 1000;
+    totalValue += 1000;
     genesisBlockTimestamp = block.timestamp;
   }
 
@@ -105,7 +101,7 @@ contract CommonDAC {
    * should be performed (preventing duplicate proposal votes).
    **/
   modifier canVote() {
-    if (members[msg.sender].ownership > 0) _;
+    if (members[msg.sender].value > 0) _;
   }
 
   /**
@@ -126,8 +122,8 @@ contract CommonDAC {
 
   /**
    * Settles all outstanding payments into user balances. Should be used prior
-   * to modifying ownership information to ensure funds are always distributed
-   * using the correct ownership ratio.
+   * to modifying value information to ensure funds are always distributed
+   * using the correct value ratio.
    **/
   function settleBalances() public canVote {
     for (uint i = 0; i < payments.length; i++) {
@@ -145,8 +141,8 @@ contract CommonDAC {
     uint totalDistributedWei = 0;
     for (uint i = 0; i < memberAddresses.length; i++) {
       address a = memberAddresses[i];
-      if (members[a].ownership == 0) continue;
-      uint owedWei = payments[index].value * members[a].ownership / totalOwnership;
+      if (members[a].value == 0) continue;
+      uint owedWei = payments[index].value * members[a].value / totalValue;
       totalDistributedWei += owedWei;
       balances[a] += owedWei;
     }
@@ -219,17 +215,17 @@ contract CommonDAC {
 
     // Update the member
     if (proposals[proposalNumber].updateMember) {
-      uint oldOwnership = members[proposals[proposalNumber].memberAddress].ownership;
-      uint newOwnership = proposals[proposalNumber].newOwnership;
-      if (oldOwnership != 0 && newOwnership == 0) {
+      uint oldOwnership = members[proposals[proposalNumber].memberAddress].value;
+      uint newValue = proposals[proposalNumber].newValue;
+      if (oldOwnership != 0 && newValue == 0) {
         // A voting member is being removed
         totalVotingMembers -= 1;
-      } else if (oldOwnership == 0 && newOwnership != 0) {
+      } else if (oldOwnership == 0 && newValue != 0) {
         // A voting member is being added
         totalVotingMembers += 1;
       }
-      totalOwnership = totalOwnership - oldOwnership + newOwnership;
-      members[proposals[proposalNumber].memberAddress].ownership = newOwnership;
+      totalValue = totalValue - oldOwnership + newValue;
+      members[proposals[proposalNumber].memberAddress].value = newValue;
       memberAddresses.push(proposals[proposalNumber].memberAddress);
     }
 
@@ -247,13 +243,13 @@ contract CommonDAC {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(bool updateMember, address memberAddress, uint newOwnership, address newContractAddress, bool updateContract) public {
+  function createProposal(bool updateMember, address memberAddress, uint newValue, address newContractAddress, bool updateContract) public {
     proposals.push(Proposal({
       number: proposals.length,
       voteCycle: currentVoteCycle() + 1,
       updateMember: updateMember,
       memberAddress: memberAddress,
-      newOwnership: newOwnership,
+      newValue: newValue,
       newContractAddress: newContractAddress,
       updateContract: updateContract,
       totalAcceptingVotes: 0,

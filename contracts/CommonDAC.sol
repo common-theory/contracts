@@ -93,15 +93,10 @@ contract CommonDAC {
 
   Payment[] public payments;
 
-  constructor(string _link, address addr) public {
-    members[addr] = Member({
-      value: 1000,
-      link: _link
-    });
-    memberAddresses.push(addr);
-    totalVotingMembers += 1;
-    totalValue += 1000;
+  constructor(address addr) public {
     genesisBlockTimestamp = block.timestamp;
+    createProposal('The bootstrap proposal, creates the first address:value binding.', true, addr, 1000, 0x0, false);
+    applyProposal(0);
   }
 
   /**
@@ -216,7 +211,7 @@ contract CommonDAC {
     if (proposals[proposalNumber].totalRejectingVotes > 0) {
       return false;
     }
-    return proposals[proposalNumber].totalAcceptingVotes > 75 * totalVotingMembers / 100;
+    return proposals[proposalNumber].totalAcceptingVotes >= 75 * totalVotingMembers / 100;
   }
 
   /**
@@ -228,16 +223,16 @@ contract CommonDAC {
 
     // Update the member
     if (proposals[proposalNumber].updateMember) {
-      uint oldOwnership = members[proposals[proposalNumber].memberAddress].value;
+      uint oldValue = members[proposals[proposalNumber].memberAddress].value;
       uint newValue = proposals[proposalNumber].newValue;
-      if (oldOwnership != 0 && newValue == 0) {
+      if (oldValue != 0 && newValue == 0) {
         // A voting member is being removed
         totalVotingMembers -= 1;
-      } else if (oldOwnership == 0 && newValue != 0) {
+      } else if (oldValue == 0 && newValue != 0) {
         // A voting member is being added
         totalVotingMembers += 1;
       }
-      totalValue = totalValue - oldOwnership + newValue;
+      totalValue = totalValue - oldValue + newValue;
       members[proposals[proposalNumber].memberAddress].value = newValue;
       memberAddresses.push(proposals[proposalNumber].memberAddress);
     }

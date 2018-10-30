@@ -14,8 +14,9 @@ pragma solidity ^0.4.23;
 contract CommonDAC {
   uint public totalVotingMembers = 0;
   uint public totalValue = 0;
+
   /**
-   * A member is an entity that has a right to value/totalOwnership of all
+   * A member is an entity that has a right to value/totalValue of all
    * funds sent to this contract.
    *
    * The extra fields are optional, and only used for user interfaces that may
@@ -26,17 +27,24 @@ contract CommonDAC {
     string link;
   }
 
+  /**
+   * A proposal for members to vote on. Proposals can change contract state.
+   **/
   struct Proposal {
-    uint number; // The proposal number
+    uint number;
     uint voteCycle;
+    string description;
+
     bool updateMember;
     address memberAddress;
     uint newValue;
-    address newContractAddress;
+
     bool updateContract;
+    address newContractAddress;
 
     uint totalAcceptingVotes;
     uint totalRejectingVotes;
+
     bool applied;
   }
 
@@ -243,8 +251,9 @@ contract CommonDAC {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(bool updateMember, address memberAddress, uint newValue, address newContractAddress, bool updateContract) public {
+  function createProposal(string _description, bool updateMember, address memberAddress, uint newValue, address newContractAddress, bool updateContract) public {
     proposals.push(Proposal({
+      description: _description,
       number: proposals.length,
       voteCycle: currentVoteCycle() + 1,
       updateMember: updateMember,

@@ -224,7 +224,9 @@ contract CommonDAC {
 
     // Update the member
     if (proposals[proposalNumber].updateMember) {
-      uint oldValue = members[proposals[proposalNumber].memberAddress].value;
+      uint currentValue = members[proposals[proposalNumber].memberAddress].value;
+      uint oldValue = proposals[proposalNumber].oldValue;
+      require(oldValue == currentValue);
       uint newValue = proposals[proposalNumber].newValue;
       if (oldValue != 0 && newValue == 0) {
         // A voting member is being removed

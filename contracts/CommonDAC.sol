@@ -37,6 +37,7 @@ contract CommonDAC {
 
     bool updateMember;
     address memberAddress;
+    uint oldValue;
     uint newValue;
 
     bool updateContract;
@@ -259,6 +260,7 @@ contract CommonDAC {
       updateMember: updateMember,
       memberAddress: memberAddress,
       newValue: newValue,
+      oldValue: members[memberAddress].value,
       newContractAddress: newContractAddress,
       updateContract: updateContract,
       totalAcceptingVotes: 0,

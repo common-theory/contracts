@@ -181,6 +181,11 @@ contract CommonDAC {
     require(proposals[proposalNumber].voteCycle == currentVoteCycle());
     require(!memberProposalVotes[msg.sender][proposalNumber]);
 
+    if (proposals[proposalNumber].updateMember) {
+      // Don't allow members to vote on proposals that modify their own value
+      require(proposals[proposalNumber].memberAddress != msg.sender);
+    }
+
     votes[msg.sender].push(Vote({
       voteCycle: currentVoteCycle(),
       proposalNumber: proposalNumber,

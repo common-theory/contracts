@@ -34,6 +34,7 @@ contract CommonDAC {
     uint number;
     uint voteCycle;
     string description;
+    address creator;
 
     bool updateMember;
     address memberAddress;
@@ -267,7 +268,8 @@ contract CommonDAC {
       updateContract: updateContract,
       totalAcceptingVotes: 0,
       totalRejectingVotes: 0,
-      applied: false
+      applied: false,
+      creator: msg.sender
     }));
   }
 

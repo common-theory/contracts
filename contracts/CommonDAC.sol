@@ -27,21 +27,22 @@ contract CommonDAC {
     string link;
   }
 
+  enum ProposalType { MemberUpdate, ContractUpdate }
+
   /**
    * A proposal for members to vote on. Proposals can change contract state.
    **/
   struct Proposal {
     uint number;
+    ProposalType _type;
     uint voteCycle;
     string description;
     address creator;
 
-    bool updateMember;
     address memberAddress;
     uint oldValue;
     uint newValue;
 
-    bool updateContract;
     address newContractAddress;
 
     uint totalAcceptingVotes;
@@ -97,7 +98,7 @@ contract CommonDAC {
 
   constructor(address addr) public {
     genesisBlockTimestamp = block.timestamp;
-    createProposal('The bootstrap proposal, creates the first address:value binding.', true, addr, 1000, 0x0, false);
+    createProposal('The bootstrap proposal, creates the first address:value binding.', ProposalType.MemberUpdate, addr, 1000, 0x0);
     applyProposal(0);
   }
 
@@ -178,7 +179,7 @@ contract CommonDAC {
     require(proposals[proposalNumber].voteCycle == currentVoteCycle());
     require(!memberProposalVotes[msg.sender][proposalNumber]);
 
-    if (proposals[proposalNumber].updateMember &&
+    if (proposals[proposalNumber]._type == ProposalType.MemberUpdate &&
         proposals[proposalNumber].memberAddress == msg.sender) {
       // Members can vote in favor of a change to themselves, but not against
       // This solves the edge case of 2 members trying to consensually remove 1
@@ -226,7 +227,7 @@ contract CommonDAC {
     if (proposals[proposalNumber].applied) return;
 
     // Update the member
-    if (proposals[proposalNumber].updateMember) {
+    if (proposals[proposalNumber]._type == ProposalType.MemberUpdate) {
       uint currentValue = members[proposals[proposalNumber].memberAddress].value;
       uint oldValue = proposals[proposalNumber].oldValue;
       require(oldValue == currentValue);
@@ -241,13 +242,11 @@ contract CommonDAC {
       totalValue = totalValue - oldValue + newValue;
       members[proposals[proposalNumber].memberAddress].value = newValue;
       memberAddresses.push(proposals[proposalNumber].memberAddress);
-    }
-
-    // Update the contract address if necessary
-    if (proposals[proposalNumber].updateContract) {
+    } else if (proposals[proposalNumber]._type == ProposalType.ContractUpdate) {
       contractUpdated = true;
       newContract = proposals[proposalNumber].newContractAddress;
     }
+
     proposals[proposalNumber].applied = true;
     emit ProposalApplied(proposalNumber);
   }
@@ -257,17 +256,16 @@ contract CommonDAC {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(string _description, bool updateMember, address memberAddress, uint newValue, address newContractAddress, bool updateContract) public {
+  function createProposal(string _description, ProposalType _type, address _memberAddress, uint _value, address _contractAddress) public {
     proposals.push(Proposal({
       description: _description,
       number: proposals.length,
       voteCycle: currentVoteCycle() + 1,
-      updateMember: updateMember,
-      memberAddress: memberAddress,
-      newValue: newValue,
-      oldValue: members[memberAddress].value,
-      newContractAddress: newContractAddress,
-      updateContract: updateContract,
+      _type: _type,
+      memberAddress: _memberAddress,
+      newValue: _value,
+      oldValue: members[_memberAddress].value,
+      newContractAddress: _contractAddress,
       totalAcceptingVotes: 0,
       totalRejectingVotes: 0,
       applied: false,

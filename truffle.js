@@ -1,6 +1,7 @@
-const PrivateKeyProvider = require('truffle-privatekey-provider');
+const HDWalletProvider = require('truffle-hdwallet-provider');
 
-const rinkebyKey = process.env.RINKEBY_PRIVATE_KEY || 'd82433dae4571119702a0b5d9eddf4695e01914b92eb7a13c7c23b044f54a1e2';
+const rinkebyKey = process.env.RINKEBY_PRIVATE_KEY || 'current pottery pretty miracle vanish release pig fiction balcony retire twist cluster';
+const provider = new HDWalletProvider(rinkebyKey, 'https://rinkeby.commontheory.io');
 
 module.exports = {
   networks: {
@@ -10,7 +11,7 @@ module.exports = {
       network_id: '*'
     },
     rinkeby: {
-      provider: new PrivateKeyProvider(rinkebyKey, 'https://rinkeby.commontheory.io'),
+      provider,
       network_id: '4'
     },
     live: {

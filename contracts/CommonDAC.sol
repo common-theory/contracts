@@ -213,6 +213,9 @@ contract CommonDAC {
    * Helper to determine if proposal is accepted.
    *
    * Proposals must have 0 rejections, and at least 75% voting participation.
+   *
+   * When less than 4 people are present in a contract all must participate in
+   * votes.
    **/
   function isProposalAccepted(uint proposalNumber) public view returns (bool) {
     if (proposals[proposalNumber].totalRejectingVotes > 0) {
@@ -223,9 +226,9 @@ contract CommonDAC {
      * both be 0.
      *
      * The expression below evaluates as equal when totalAcceptingVotes and
-     * totalVotingMembers are both 0: 0 >= 75 * 0 / 100
+     * totalVotingMembers are both 0: 100 * 0 >= 75 * 0
      **/
-    return proposals[proposalNumber].totalAcceptingVotes >= 75 * totalVotingMembers / 100;
+    return 100 * proposals[proposalNumber].totalAcceptingVotes >= 75 * totalVotingMembers;
   }
 
   /**

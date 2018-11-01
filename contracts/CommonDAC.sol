@@ -216,6 +216,13 @@ contract CommonDAC {
     if (proposals[proposalNumber].totalRejectingVotes > 0) {
       return false;
     }
+    /**
+     * When bootstrapping the totalRejectingVotes and totalAcceptingVotes will
+     * both be 0.
+     *
+     * The expression below evaluates as equal when totalAcceptingVotes and
+     * totalVotingMembers are both 0: 0 >= 75 * 0 / 100
+     **/
     return proposals[proposalNumber].totalAcceptingVotes >= 75 * totalVotingMembers / 100;
   }
 

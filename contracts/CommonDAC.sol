@@ -49,6 +49,8 @@ contract CommonDAC {
     uint totalRejectingVotes;
 
     bool applied;
+
+    uint creationTimestamp;
   }
 
   struct Vote {
@@ -276,7 +278,8 @@ contract CommonDAC {
       totalAcceptingVotes: 0,
       totalRejectingVotes: 0,
       applied: false,
-      creator: msg.sender
+      creator: msg.sender,
+      creationTimestamp: block.timestamp
     }));
   }
 

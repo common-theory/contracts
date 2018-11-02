@@ -45,18 +45,19 @@ const subdomain = domainParts.slice(0, -2).join('.') || '@';
       if (record.name !== subdomain) return false;
       return record;
     });
+    const recordData = `dnslink=/ipfs/${hash}`;
     if (!dnslinkRecord) {
       console.log('Unable to find dnslink record, creating a new one');
       await client.domains.createRecord(rootDomain, {
         type: 'TXT',
         name: subdomain,
-        data: `dnslink=/ipfs/${hash}`,
+        data: recordData,
         ttl: 360
       });
     } else {
       console.log('Found dnslink record, updating');
       await client.domains.updateRecord(rootDomain, dnslinkRecord.id, {
-        data: `dnslink=/ipfs/${hash}`
+        data: recordData
       });
     }
     console.log('DNS record updated')

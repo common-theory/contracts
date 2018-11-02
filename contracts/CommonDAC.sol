@@ -100,7 +100,7 @@ contract CommonDAC {
 
   constructor(address addr) public {
     genesisBlockTimestamp = block.timestamp;
-    createProposal('The bootstrap proposal, creates the first address:value binding.', ProposalType.MemberUpdate, addr, 100, 0x0);
+    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0);
     applyProposal(0);
   }
 

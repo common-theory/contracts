@@ -19,6 +19,7 @@
   "devDependencies": {
     "digitalocean": "^1.2.0",
     "ganache-cli": "^6.1.8",
+    "git-pre-commit": "^2.1.4",
     "lcov-badge-generator": "^1.0.5",
     "node-fetch": "^2.2.0",
     "solidity-coverage": "^0.5.11",

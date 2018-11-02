@@ -5,7 +5,7 @@ pragma solidity ^0.4.23;
  * funds sent to this contract are distributed to members based on their ratio
  * of value vs the total amount of value in the contract.
  *
- * Changes to members can be proposed and are voted on every 2 weeks.
+ * Changes to members can be proposed and are voted voteCycleLength seconds.
  *
  * Votes are successful only if 100% of voters agree, and at least 75% of voters
  * participate.
@@ -78,13 +78,12 @@ contract CommonDAC {
   mapping (address => uint) public balances;
 
   /**
-   * Approximately 2 weeks between votes.
+   * Approximately 3 days for each voting cycle.
    *
-   * This is not mutable in this contract, but can be included in proposals in
-   * a subsequent version of this DAC.
+   * Changeable via proposal
    **/
-  uint public minVoteCycleLength = 60;
-  uint public voteCycleLength = 60 * 30;
+  uint public minVoteCycleLength = 15;
+  uint public voteCycleLength = 60 * 60 * 24 * 3;
   uint public lastVoteCycleLengthUpdate;
   uint public lastVoteCycleNumber;
   uint public genesisBlockTimestamp;
@@ -102,12 +101,19 @@ contract CommonDAC {
 
   Payment[] public payments;
 
-  constructor(address addr) public {
+  constructor(address addr, uint _voteCycleLength) public {
     genesisBlockTimestamp = block.timestamp;
     lastVoteCycleLengthUpdate = block.timestamp;
     lastVoteCycleNumber = 0;
+    /**
+     * Proposals can be applied immediately when there are 0 members.
+     **/
+    if (_voteCycleLength != 0) {
+      createProposal('Adjust vote cycle time.', ProposalType.VoteCycleUpdate, 0x0, 0, 0x0, _voteCycleLength);
+      applyProposal(0);
+    }
     createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0, 0);
-    applyProposal(0);
+    applyProposal(1);
   }
 
   /**

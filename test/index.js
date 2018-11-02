@@ -6,7 +6,7 @@ contract('CommonDAC', accounts => {
     return CommonDAC.deployed()
       .then(instance => instance.proposalCount.call())
       .then(proposalCount => {
-        assert.equal(proposalCount, 1, 'Initial proposal not present.');
+        assert.notEqual(proposalCount, 0, 'Initial proposal not present.');
       });
   });
 

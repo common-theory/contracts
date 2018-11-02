@@ -27,7 +27,7 @@ contract CommonDAC {
     string link;
   }
 
-  enum ProposalType { MemberUpdate, ContractUpdate }
+  enum ProposalType { MemberUpdate, ContractUpdate, VoteCycleUpdate }
 
   /**
    * A proposal for members to vote on. Proposals can change contract state.
@@ -51,6 +51,7 @@ contract CommonDAC {
     bool applied;
 
     uint creationTimestamp;
+    uint voteCycleLength;
   }
 
   struct Vote {
@@ -82,7 +83,10 @@ contract CommonDAC {
    * This is not mutable in this contract, but can be included in proposals in
    * a subsequent version of this DAC.
    **/
-  uint public votePeriod = 60 * 30;
+  uint public minVoteCycleLength = 60;
+  uint public voteCycleLength = 60 * 30;
+  uint public lastVoteCycleLengthUpdate;
+  uint public lastVoteCycleNumber;
   uint public genesisBlockTimestamp;
 
   Proposal[] public proposals;
@@ -100,7 +104,9 @@ contract CommonDAC {
 
   constructor(address addr) public {
     genesisBlockTimestamp = block.timestamp;
-    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0);
+    lastVoteCycleLengthUpdate = block.timestamp;
+    lastVoteCycleNumber = 0;
+    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0, 0);
     applyProposal(0);
   }
 
@@ -257,6 +263,10 @@ contract CommonDAC {
     } else if (proposals[proposalNumber]._type == ProposalType.ContractUpdate) {
       contractUpdated = true;
       newContract = proposals[proposalNumber].newContractAddress;
+    } else if (proposals[proposalNumber]._type == ProposalType.VoteCycleUpdate) {
+      voteCycleLength = proposals[proposalNumber].voteCycleLength;
+      lastVoteCycleLengthUpdate = block.timestamp;
+      lastVoteCycleNumber = currentVoteCycle();
     }
 
     proposals[proposalNumber].applied = true;
@@ -268,7 +278,10 @@ contract CommonDAC {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(string _description, ProposalType _type, address _memberAddress, uint _value, address _contractAddress) public {
+  function createProposal(string _description, ProposalType _type, address _memberAddress, uint _value, address _contractAddress, uint _voteCycleLength) public {
+    if (_type == ProposalType.VoteCycleUpdate) {
+      require(_voteCycleLength >= minVoteCycleLength);
+    }
     proposals.push(Proposal({
       description: _description,
       number: proposals.length,
@@ -282,7 +295,8 @@ contract CommonDAC {
       totalRejectingVotes: 0,
       applied: false,
       creator: msg.sender,
-      creationTimestamp: block.timestamp
+      creationTimestamp: block.timestamp,
+      voteCycleLength: _voteCycleLength
     }));
   }
 
@@ -305,6 +319,6 @@ contract CommonDAC {
    * Determine current vote cycle based on time offset and vote time period.
    **/
   function currentVoteCycle() public view returns (uint) {
-    return (block.timestamp - genesisBlockTimestamp) / votePeriod;
+    return lastVoteCycleNumber + (block.timestamp - lastVoteCycleLengthUpdate) / voteCycleLength;
   }
 }

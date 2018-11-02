@@ -5,4 +5,5 @@ node_js:
   10
 
 script:
-  - npm run build
+  - npm run ganache &
+  - npm run coverage

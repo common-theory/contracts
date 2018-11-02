@@ -9,12 +9,14 @@
     "deploy:dev": "npm run clean && truffle migrate --network development",
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "ganache": "ganache-cli -b 10 -p 7545",
+    "coverage": "solidity-coverage",
     "test": "truffle test"
   },
   "author": "Chance Hudson",
   "license": "MIT",
   "devDependencies": {
     "ganache-cli": "^6.1.8",
+    "solidity-coverage": "^0.5.11",
     "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },

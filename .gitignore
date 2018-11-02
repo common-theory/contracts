@@ -4,3 +4,8 @@ node_modules
 *.swp
 build/
 static/index.html
+
+# solidity-coverage
+coverage/
+coverage.json
+coverageEnv/

@@ -10,12 +10,15 @@
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "ganache": "ganache-cli -b 10 -p 7545",
     "coverage": "solidity-coverage",
+    "upload-coverage": "node ./scripts/dns-update.js _dnslink.coverage.commontheory.io ./coverage",
     "test": "truffle test"
   },
   "author": "Chance Hudson",
   "license": "MIT",
   "devDependencies": {
+    "digitalocean": "^1.2.0",
     "ganache-cli": "^6.1.8",
+    "node-fetch": "^2.2.0",
     "solidity-coverage": "^0.5.11",
     "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"

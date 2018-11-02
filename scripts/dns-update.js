@@ -46,19 +46,26 @@ const subdomain = domainParts.slice(0, -2).join('.') || '@';
       return record;
     });
     if (!dnslinkRecord) {
-      console.log('Unable to find dnslink record!');
-      process.exit(1);
+      console.log('Unable to find dnslink record, creating a new one');
+      await client.domains.createRecord(rootDomain, {
+        type: 'TXT',
+        name: subdomain,
+        data: `dnslink=/ipfs/${hash}`,
+        ttl: 360
+      });
+    } else {
+      console.log('Found dnslink record, updating');
+      await client.domains.updateRecord(rootDomain, dnslinkRecord.id, {
+        data: `dnslink=/ipfs/${hash}`
+      });
     }
-    await client.domains.updateRecord(rootDomain, dnslinkRecord.id, {
-      data: `dnslink=/ipfs/${hash}`
-    });
     console.log('DNS record updated')
     // Pull the file across the ipfs servers so it's available for at least a bit
     await fetch(`https://ipfs.io/ipfs/${hash}`);
     // Pull commontheory.io 5 times to make sure each ipfs node is hit
     // await Promise.all(Array.apply(null, Array(5)).map(() => fetch('https://commontheory.io')));
     const msWait = 60 * 2 * 1000;
-    console.log(`Waiting ${msWait / 1000} seconds before spinning down.`);
+    console.log(`Waiting ${msWait / 1000} seconds before spinning down`);
     setTimeout(() => process.exit(0), msWait);
   } catch (err) {
     console.log(err);

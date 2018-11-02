@@ -8,11 +8,12 @@
     "build": "npm run clean && truffle compile",
     "deploy:dev": "npm run clean && truffle migrate --network development",
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test"
   },
   "author": "Chance Hudson",
   "license": "MIT",
   "devDependencies": {
+    "ganache-cli": "^6.1.8",
     "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },

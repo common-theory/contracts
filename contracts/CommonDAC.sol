@@ -108,12 +108,12 @@ contract CommonDAC {
     /**
      * Proposals can be applied immediately when there are 0 members.
      **/
+    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0, 0);
     if (_voteCycleLength != 0) {
       createProposal('Adjust vote cycle time.', ProposalType.VoteCycleUpdate, 0x0, 0, 0x0, _voteCycleLength);
-      applyProposal(0);
+      applyProposal(1);
     }
-    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0, 0);
-    applyProposal(1);
+    applyProposal(0);
   }
 
   /**

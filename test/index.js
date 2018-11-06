@@ -4,6 +4,8 @@ const assert = require('assert');
 /**
  * A helper to generate promises that resolve when a certain voting cycle is
  * active.
+ *
+ * Rejects the promise if the target cycle has passed.
  **/
 const waitForCycle = (cycleNumber, contract) =>
   new Promise(async (rs, rj) => {

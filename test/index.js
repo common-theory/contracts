@@ -1,4 +1,5 @@
 const CommonDAC = artifacts.require('CommonDAC');
+const assert = require('assert');
 
 contract('CommonDAC', accounts => {
 

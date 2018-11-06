@@ -34,7 +34,7 @@ const subdomain = domainParts.slice(0, -2).join('.') || '@';
 
 (async () => {
   try {
-    const daemon = exec('ipfs init && ipfs daemon');
+    const daemon = exec('ipfs init && ipfs daemon &');
     const hash = (await pexec(`sleep 10 && ipfs add -r ${pathArg} -Q`)).replace(/\s/g, '');
     console.log(`Added static directory at ${hash}`);
     const domains = await client.domains.list();

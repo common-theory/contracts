@@ -9,3 +9,5 @@ static/index.html
 coverage/
 coverage.json
 coverageEnv/
+scTopics
+allFiredEvents

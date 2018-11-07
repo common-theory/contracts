@@ -1,5 +1,10 @@
 sudo: required
 
+after_success:
+  - bash <(curl -s https://raw.githubusercontent.com/common-theory/travis-ci-discord-webhook/master/send.sh) success $DISCORD_WEBHOOK_URL
+after_failure:
+  - bash <(curl -s https://raw.githubusercontent.com/common-theory/travis-ci-discord-webhook/master/send.sh) failure $DISCORD_WEBHOOK_URL
+
 language: node_js
 node_js:
   10

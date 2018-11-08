@@ -10,7 +10,7 @@
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "ganache": "ganache-cli -b 10 -p 7545",
     "coverage": "solidity-coverage && lcov-badge-generator ./coverage/lcov.info -o ./test/badge.svg",
-    "upload-coverage": "node ./scripts/dns-update.js _dnslink.coverage.commontheory.io ./coverage",
+    "upload-coverage": "jsdnslink update _dnslink.coverage.commontheory.io /ipfs/$(ipfs add -Qr ./coverage)",
     "precommit": "npm run coverage && git add ./test/badge.svg",
     "test": "truffle test"
   },
@@ -18,6 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "digitalocean": "^1.2.0",
+    "dnslink": "^0.2.0",
     "ganache-cli": "^6.1.8",
     "git-pre-commit": "^2.1.4",
     "lcov-badge-generator": "^1.0.5",

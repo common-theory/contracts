@@ -20,6 +20,7 @@ script:
   - sudo mv ./go-ipfs/ipfs /usr/local/bin/ipfs
   - rm -rf go-ipfs
   - rm go-ipfs_v0.4.17_linux-386.tar.gz
+  - ipfs daemon &
   - npm run ganache &
   - npm run coverage
   - npm run upload-coverage

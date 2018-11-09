@@ -1,21 +1,6 @@
 pragma solidity ^0.4.23;
 
-/**
- * Let's make an interface that allows contracts to delegate state variable
- * value control to common theory instances.
- **/
-interface ControlDelegated {
-  // The address of the common theory contract control has been delegated to.
-  function commonAddress() external view returns (address);
-}
-
-contract CommonHosting is ControlDelegated {
-
-  address _commonAddress;
-
-  function commonAddress() external view returns (address) {
-    return _commonAddress;
-  }
+contract CommonHosting {
 
   /**
    * A domain that is being hosted. The dnslinked ipfs file or directory will

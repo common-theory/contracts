@@ -25,18 +25,18 @@ contract CommonSyndicate {
 
   struct Payment {
     address sender;
-    uint256 value;
+    uint256 weiValue;
     bool settled;
   }
 
-  uint256 public totalValue = 0;
+  uint256 public totalSyndicateValue = 0;
 
   /**
    * The contract itself can be stored as a member of the syndicate
    **/
   struct Member {
     address receiving;
-    uint256 value;
+    uint256 syndicateValue;
   }
   // The first member should always be the contract itself
   Member[] public members;
@@ -48,6 +48,10 @@ contract CommonSyndicate {
 
   constructor(address _commonVoting) public {
     commonVoting = _commonVoting;
+    members.push(Member({
+      receiving: address(this),
+      syndicateValue: 100
+    }));
   }
 
   /**
@@ -60,14 +64,14 @@ contract CommonSyndicate {
     } else {
       payments.push(Payment({
         sender: msg.sender,
-        value: msg.value,
+        weiValue: msg.value,
         settled: false
       }));
     }
   }
 
   modifier commonVote() {
-    require(msg.sender == this.commonVoting);
+    require(msg.sender == commonVoting);
     _;
   }
 
@@ -76,27 +80,35 @@ contract CommonSyndicate {
    *
    * Can only be executed by common vote
    **/
-  function putMember(address _receiving, int256 _value) public commonVote {
+  function putMember(address _receiving, uint256 _syndicateValue) public commonVote {
     Member memory member = Member({
       receiving: _receiving,
-      value: _value
+      syndicateValue: _syndicateValue
     });
-    if (memberIndex[_receiving] == 0 && _receiving != this) {
+    if (isMember(_receiving)) {
       // We're adding a new member
       members.push(member);
-      totalValue += _value;
+      totalSyndicateValue += _syndicateValue;
     } else {
       // We're updating an existing member
-      totalValue -= members[memberIndex[_receiving]].value;
+      totalSyndicateValue -= members[memberIndex[_receiving]].syndicateValue;
       members[memberIndex[_receiving]] = member;
-      totalValue += _value;
+      totalSyndicateValue += _syndicateValue;
     }
   }
 
   /**
-   * Settles all outstanding payments into user balances. Should be used prior
+   * Determine if the supplied address has previously been added to this
+   * syndicate
+   **/
+  function isMember(address receiving) public view returns (bool) {
+    return (memberIndex[receiving] == 0 && receiving != address(this));
+  }
+
+  /**
+   * Settles all outstanding payments into member balances. Should be used prior
    * to modifying value information to ensure funds are always distributed
-   * using the correct value ratio.
+   * using the correct value ratio at the time they were received.
    **/
   function settleBalances() public {
     for (uint256 i = 0; i < payments.length; i++) {
@@ -106,20 +118,17 @@ contract CommonSyndicate {
   }
 
   /**
-   * Settles a specific payment into smart contract balances.
-   *
-   * Funds can be withdrawn using the withdraw function below.
+   * Settles a specific payment into smart contract balances
    **/
-  function settlePayment(uint index) public {
-    uint totalDistributedWei = 0;
-    for (uint i = 0; i < memberAddresses.length; i++) {
-      address a = memberAddresses[i];
-      if (members[a].value == 0) continue;
-      uint owedWei = payments[index].value * members[a].value / totalValue;
+  function settlePayment(uint256 index) public {
+    uint256 totalDistributedWei = 0;
+    for (uint256 i = 0; i < members.length; i++) {
+      if (members[i].syndicateValue == 0) continue;
+      uint256 owedWei = payments[index].weiValue * members[i].syndicateValue / totalSyndicateValue;
       totalDistributedWei += owedWei;
-      balances[a] += owedWei;
+      balances[members[i].receiving] += owedWei;
     }
-    assert(totalDistributedWei == payments[index].value);
+    require(totalDistributedWei == payments[index].weiValue);
     payments[index].settled = true;
   }
 

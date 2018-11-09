@@ -87,6 +87,9 @@ contract CommonSyndicate {
    * Can only be executed by common vote
    **/
   function putMember(address _receiving, uint256 _syndicateValue) public commonVote {
+    // Before we adjust syndicate values settle any outstanding payments
+    settleBalances();
+
     Member memory member = Member({
       receiving: _receiving,
       syndicateValue: _syndicateValue

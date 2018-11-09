@@ -82,6 +82,15 @@ contract CommonSyndicate {
   }
 
   /**
+   * Make a one time payment from the syndicate
+   **/
+  function sendEth(address receiver, uint256 weiValue) public commonVote {
+    uint256 balance = balances[address(this)];
+    require(weiValue <= balance);
+    receiver.transfer(balance);
+  }
+
+  /**
    * Set values for a member
    *
    * Can only be executed by common vote

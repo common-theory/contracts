@@ -18,23 +18,36 @@ pragma solidity ^0.4.23;
 
 contract CommonSyndicate {
 
-  mapping (address => uint) public balances;
+  mapping (address => uint256) public balances;
 
   bool public contractUpdated = false;
   address public newContract;
 
   struct Payment {
     address sender;
-    uint value;
+    uint256 value;
     bool settled;
   }
 
+  uint256 public totalValue = 0;
+
+  /**
+   * The contract itself can be stored as a member of the syndicate
+   **/
+  struct Member {
+    address receiving;
+    uint256 value;
+  }
+  // The first member should always be the contract itself
+  Member[] public members;
+  mapping (address => uint256) memberIndex;
+
   Payment[] public payments;
 
-  address public decisionContract;
+  address public commonVoting;
 
-  constructor(address _decisionContract) public {
-    decisionContract = _decisionContract;
+  constructor(address _commonVoting) public {
+    commonVoting = _commonVoting;
   }
 
   /**
@@ -53,13 +66,40 @@ contract CommonSyndicate {
     }
   }
 
+  modifier commonVote() {
+    require(msg.sender == this.commonVoting);
+    _;
+  }
+
+  /**
+   * Set values for a member
+   *
+   * Can only be executed by common vote
+   **/
+  function putMember(address _receiving, int256 _value) public commonVote {
+    Member memory member = Member({
+      receiving: _receiving,
+      value: _value
+    });
+    if (memberIndex[_receiving] == 0 && _receiving != this) {
+      // We're adding a new member
+      members.push(member);
+      totalValue += _value;
+    } else {
+      // We're updating an existing member
+      totalValue -= members[memberIndex[_receiving]].value;
+      members[memberIndex[_receiving]] = member;
+      totalValue += _value;
+    }
+  }
+
   /**
    * Settles all outstanding payments into user balances. Should be used prior
    * to modifying value information to ensure funds are always distributed
    * using the correct value ratio.
    **/
   function settleBalances() public {
-    for (uint i = 0; i < payments.length; i++) {
+    for (uint256 i = 0; i < payments.length; i++) {
       if (payments[i].settled) continue;
       settlePayment(i);
     }

@@ -95,13 +95,13 @@ contract CommonSyndicate {
       syndicateValue: _syndicateValue
     });
     if (isMember(_receiving)) {
-      // We're adding a new member
-      members.push(member);
-      totalSyndicateValue += _syndicateValue;
-    } else {
       // We're updating an existing member
       totalSyndicateValue -= members[memberIndex[_receiving]].syndicateValue;
       members[memberIndex[_receiving]] = member;
+      totalSyndicateValue += _syndicateValue;
+    } else {
+      // We're adding a new member
+      members.push(member);
       totalSyndicateValue += _syndicateValue;
     }
   }
@@ -111,7 +111,7 @@ contract CommonSyndicate {
    * syndicate
    **/
   function isMember(address receiving) public view returns (bool) {
-    return (memberIndex[receiving] == 0 && receiving != address(this));
+    return (memberIndex[receiving] != 0 || receiving == address(this));
   }
 
   /**

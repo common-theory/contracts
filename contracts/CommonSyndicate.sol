@@ -55,7 +55,7 @@ contract CommonSyndicate {
    * to modifying value information to ensure funds are always distributed
    * using the correct value ratio.
    **/
-  function settleBalances() public canVote {
+  function settleBalances() public {
     for (uint i = 0; i < payments.length; i++) {
       if (payments[i].settled) continue;
       settlePayment(i);
@@ -67,7 +67,7 @@ contract CommonSyndicate {
    *
    * Funds can be withdrawn using the withdraw function below.
    **/
-  function settlePayment(uint index) public canVote {
+  function settlePayment(uint index) public {
     uint totalDistributedWei = 0;
     for (uint i = 0; i < memberAddresses.length; i++) {
       address a = memberAddresses[i];

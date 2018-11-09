@@ -21,36 +21,34 @@ contract CommonDecision {
    * consume the data.
    **/
   struct Member {
-    uint value;
+    address _address;
+    bool active;
     string link;
   }
 
   enum ProposalType { MemberUpdate, ContractUpdate, VoteCycleUpdate }
 
+  uint256 constant MAX_PROPOSAL_ARG_COUNT = 3;
   /**
    * A proposal for members to vote on. Proposals can change contract state.
    **/
   struct Proposal {
+    /* Static values */
     uint number;
-    ProposalType _type;
     uint voteCycle;
-    
     uint creationTimestamp;
-    uint voteCycleLength;
-    string description;
     address creator;
 
-    address memberAddress;
-    uint oldValue;
-    uint newValue;
+    /* Input values */
+    string description;
+    address targetContract;
+    string functionSignature;
+    bytes32[MAX_PROPOSAL_ARG_COUNT] arguments;
 
-    address newContractAddress;
-
+    /* State info */
     uint totalAcceptingVotes;
     uint totalRejectingVotes;
-
     bool applied;
-
   }
 
   struct Vote {
@@ -69,36 +67,30 @@ contract CommonDecision {
     uint proposalNumber
   );
 
-  mapping (address => Member) public members;
+  Member[] members;
+  /* mapping (address => Member) public members; */
+  mapping (address => uint256) memberIndex;
   address[] public memberAddresses;
   mapping (address => Vote[]) public votes;
-  mapping (address => mapping (uint => bool)) public memberProposalVotes;
+  mapping (address => mapping (uint256 => bool)) public memberProposalVotes;
 
-  mapping (address => uint) public balances;
+  mapping (address => uint256) public balances;
 
   /**
-   * Approximately 3 days for each voting cycle.
-   *
+   * 30 minute vote cycles
    * Changeable via proposal
    **/
-  uint public minVoteCycleLength = 15;
-  uint public voteCycleLength = 60 * 60 * 24 * 3;
-  uint public lastVoteCycleLengthUpdate;
-  uint public lastVoteCycleNumber;
-  uint public genesisBlockTimestamp;
+  uint256 public minVoteCycleLength = 15;
+  uint256 public voteCycleLength = 60 * 30;
+  uint256 public lastVoteCycleLengthUpdate;
+  uint256 public lastVoteCycleNumber;
+  uint256 public genesisBlockTimestamp;
+
 
   Proposal[] public proposals;
 
   bool public contractUpdated = false;
   address public newContract;
-
-  struct Payment {
-    address sender;
-    uint value;
-    bool settled;
-  }
-
-  Payment[] public payments;
 
   constructor(address addr, uint _voteCycleLength) public {
     genesisBlockTimestamp = block.timestamp;
@@ -107,9 +99,14 @@ contract CommonDecision {
     /**
      * Proposals can be applied immediately when there are 0 members.
      **/
-    createProposal('The bootstrap proposal, creates the first address value binding.', ProposalType.MemberUpdate, addr, 100, 0x0, 0);
+    bytes32[MAX_PROPOSAL_ARG_COUNT] memory arguments;
+    arguments[0] = bytes32(addr);
+    arguments[1] = bytes32(1);
+    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'putMember(address, bool)', arguments);
     if (_voteCycleLength != 0) {
-      createProposal('Adjust vote cycle time.', ProposalType.VoteCycleUpdate, 0x0, 0, 0x0, _voteCycleLength);
+      bytes32[MAX_PROPOSAL_ARG_COUNT] memory voteArguments;
+      voteArguments[0] = bytes32(_voteCycleLength);
+      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(uint256)', voteArguments);
       applyProposal(1);
     }
     applyProposal(0);
@@ -120,62 +117,7 @@ contract CommonDecision {
    * should be performed (preventing duplicate proposal votes).
    **/
   modifier canVote() {
-    if (members[msg.sender].value > 0) _;
-  }
-
-  /**
-   * Default payment function. Adds an unsettled payment entry, or forwards the
-   * payment to the updated contract (if an update proposal has passed).
-   **/
-  function() public payable {
-    if (contractUpdated) {
-      newContract.transfer(msg.value);
-    } else {
-      payments.push(Payment({
-        sender: msg.sender,
-        value: msg.value,
-        settled: false
-      }));
-    }
-  }
-
-  /**
-   * Settles all outstanding payments into user balances. Should be used prior
-   * to modifying value information to ensure funds are always distributed
-   * using the correct value ratio.
-   **/
-  function settleBalances() public canVote {
-    for (uint i = 0; i < payments.length; i++) {
-      if (payments[i].settled) continue;
-      settlePayment(i);
-    }
-  }
-
-  /**
-   * Settles a specific payment into smart contract balances.
-   *
-   * Funds can be withdrawn using the withdraw function below.
-   **/
-  function settlePayment(uint index) public canVote {
-    uint totalDistributedWei = 0;
-    for (uint i = 0; i < memberAddresses.length; i++) {
-      address a = memberAddresses[i];
-      if (members[a].value == 0) continue;
-      uint owedWei = payments[index].value * members[a].value / totalValue;
-      totalDistributedWei += owedWei;
-      balances[a] += owedWei;
-    }
-    assert(totalDistributedWei == payments[index].value);
-    payments[index].settled = true;
-  }
-
-  /**
-   * Withdraw the balance for the calling address.
-   **/
-  function withdraw() public {
-    if (balances[msg.sender] == 0) return;
-    msg.sender.transfer(balances[msg.sender]);
-    balances[msg.sender] = 0;
+    if (members[memberIndex[msg.sender]].active) _;
   }
 
   /**
@@ -189,13 +131,18 @@ contract CommonDecision {
    **/
   function vote(uint proposalNumber, bool accept) public canVote {
 
-    require(proposals[proposalNumber].voteCycle == currentVoteCycle());
+    Proposal memory proposal = proposals[proposalNumber];
+
+    require(proposal.voteCycle == currentVoteCycle());
     require(!memberProposalVotes[msg.sender][proposalNumber]);
 
-    if (proposals[proposalNumber]._type == ProposalType.MemberUpdate &&
-        proposals[proposalNumber].memberAddress == msg.sender) {
+    // Check if it's a vote to change a member of _this_ contract
+    // And if the current member voting is the one being updated
+    if (proposal.targetContract == address(this) &&
+        proposal.arguments[0] == bytes32(msg.sender) &&
+        stringContains(proposal.functionSignature, 'updateMember')) {
       // Members can vote in favor of a change to themselves, but not against
-      // This solves the edge case of 2 members trying to consensually remove 1
+      // This solves the edge case of 2 or 3 members trying to consensually remove 1
       require(accept);
     }
 
@@ -249,8 +196,27 @@ contract CommonDecision {
     require(isProposalAccepted(proposalNumber));
     if (proposals[proposalNumber].applied) return;
 
-    // Update the member
-    if (proposals[proposalNumber]._type == ProposalType.MemberUpdate) {
+    Proposal memory proposal = proposals[proposalNumber];
+    bytes4 signature = bytes4(keccak256(abi.encodePacked(proposal.functionSignature)));
+
+    // Not a big fan of this, but don't see a trivial implementation that's better
+    if (proposal.arguments.length == 0) {
+      require(proposal.targetContract.call(signature));
+    } else if (proposal.arguments.length == 1) {
+      require(proposal.targetContract.call(signature, proposal.arguments[0]));
+    } else if (proposal.arguments.length == 2) {
+      require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1]));
+    } else if (proposal.arguments.length == 3) {
+      require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2]));
+    } else {
+      // Invalid number of arguments received
+      // TODO: Throw an actual error, not silently revert
+      require(false);
+    }
+    proposals[proposalNumber].applied = true;
+    emit ProposalApplied(proposalNumber);
+
+    /* if (proposals[proposalNumber]._type == ProposalType.MemberUpdate) {
       uint currentValue = members[proposals[proposalNumber].memberAddress].value;
       uint oldValue = proposals[proposalNumber].oldValue;
       require(oldValue == currentValue);
@@ -272,10 +238,7 @@ contract CommonDecision {
       voteCycleLength = proposals[proposalNumber].voteCycleLength;
       lastVoteCycleLengthUpdate = block.timestamp;
       lastVoteCycleNumber = currentVoteCycle();
-    }
-
-    proposals[proposalNumber].applied = true;
-    emit ProposalApplied(proposalNumber);
+    } */
   }
 
   /**
@@ -283,26 +246,32 @@ contract CommonDecision {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(string _description, ProposalType _type, address _memberAddress, uint _value, address _contractAddress, uint _voteCycleLength) public {
-    if (_type == ProposalType.VoteCycleUpdate) {
-      require(_voteCycleLength >= minVoteCycleLength);
-    }
+  function createProposal(string _description, address _targetContract, string _functionSignature, bytes32[MAX_PROPOSAL_ARG_COUNT] _arguments) public {
     proposals.push(Proposal({
       description: _description,
+      targetContract: _targetContract,
+      functionSignature: _functionSignature,
+      arguments: _arguments,
       number: proposals.length,
       voteCycle: currentVoteCycle() + 1,
-      _type: _type,
-      memberAddress: _memberAddress,
-      newValue: _value,
-      oldValue: members[_memberAddress].value,
-      newContractAddress: _contractAddress,
       totalAcceptingVotes: 0,
       totalRejectingVotes: 0,
       applied: false,
       creator: msg.sender,
-      creationTimestamp: block.timestamp,
-      voteCycleLength: _voteCycleLength
+      creationTimestamp: block.timestamp
     }));
+  }
+
+  modifier commonDecision() {
+    require(msg.sender == address(this));
+    _;
+  }
+
+  /**
+   * Called when a proposal is applied
+   **/
+  function updateMember(bytes32 _address, bytes32 _active) private commonDecision {
+    members[memberIndex[address(_address)]].active = (_active != 0);
   }
 
   /**
@@ -310,10 +279,6 @@ contract CommonDecision {
    **/
   function proposalCount() public view returns (uint) {
     return proposals.length;
-  }
-
-  function paymentCount() public view returns (uint) {
-    return payments.length;
   }
 
   function memberAddressCount() public view returns (uint) {
@@ -326,4 +291,22 @@ contract CommonDecision {
   function currentVoteCycle() public view returns (uint) {
     return lastVoteCycleNumber + (block.timestamp - lastVoteCycleLengthUpdate) / voteCycleLength;
   }
+
+  /**
+   * Determines if a string contains another string
+   **/
+  function stringContains(string _haystack, string _needle) public pure returns (bool) {
+    bytes memory haystack = bytes(_haystack);
+    bytes memory needle = bytes(_needle);
+    if (needle.length > haystack.length) return false;
+    for (uint256 x = 0; x < haystack.length; x++) {
+      if (haystack[x] != needle[0]) continue;
+      for (uint256 y = 0; y < needle.length; y++) {
+        if (haystack[x + y] != needle[y]) break;
+        if (y == needle.length - 1) return true;
+      }
+    }
+    return false;
+  }
+
 }

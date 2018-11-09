@@ -11,7 +11,7 @@
     "ganache": "ganache-cli -b 10 -p 7545",
     "coverage": "solidity-coverage && lcov-badge-generator ./coverage/lcov.info -o ./test/badge.svg",
     "upload-coverage": "jsdnslink update _dnslink.coverage.commontheory.io /ipfs/$(ipfs add -Qr ./coverage)",
-    "precommit": "npm run coverage && git add ./test/badge.svg",
+    "precommit": "echo 'precommit hook disabled' || npm run coverage && git add ./test/badge.svg",
     "test": "truffle test"
   },
   "author": "Chance Hudson",

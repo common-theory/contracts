@@ -50,10 +50,10 @@ contract CommonSyndicate {
 
   Payment[] public payments;
 
-  address public commonVoting;
+  address public decisionContract;
 
-  constructor(address _commonVoting) public {
-    commonVoting = _commonVoting;
+  constructor(address _decisionContract) public {
+    decisionContract = _decisionContract;
     members.push(Member({
       receiving: address(this),
       syndicateValue: 100
@@ -76,15 +76,15 @@ contract CommonSyndicate {
     }
   }
 
-  modifier commonVote() {
-    require(msg.sender == commonVoting);
+  modifier commonDecision() {
+    require(msg.sender == decisionContract);
     _;
   }
 
   /**
    * Make a one time payment from the syndicate
    **/
-  function sendEth(address receiver, uint256 weiValue) public commonVote {
+  function sendEth(address receiver, uint256 weiValue) public commonDecision {
     uint256 balance = balances[address(this)];
     require(weiValue <= balance);
     receiver.transfer(balance);
@@ -95,7 +95,7 @@ contract CommonSyndicate {
    *
    * Can only be executed by common vote
    **/
-  function putMember(address _receiving, uint256 _syndicateValue) public commonVote {
+  function putMember(address _receiving, uint256 _syndicateValue) public commonDecision {
     // Before we adjust syndicate values settle any outstanding payments
     settleBalances();
 
@@ -160,6 +160,9 @@ contract CommonSyndicate {
     balances[msg.sender] = 0;
   }
 
+  /**
+   * Accessor for array length
+   **/
   function paymentCount() public view returns (uint) {
     return payments.length;
   }

@@ -1,9 +1,7 @@
 pragma solidity ^0.4.23;
 
 /**
- * A simple payment routing contract for people looking to work together. Any
- * funds sent to this contract are distributed to members based on their ratio
- * of value vs the total amount of value in the contract.
+ * A contract to facilitate decision making between humans.
  *
  * Changes to members can be proposed and are voted voteCycleLength seconds.
  *
@@ -11,7 +9,7 @@ pragma solidity ^0.4.23;
  * participate.
  **/
 
-contract CommonVoting {
+contract CommonDecision {
   uint public totalVotingMembers = 0;
   uint public totalValue = 0;
 
@@ -36,6 +34,9 @@ contract CommonVoting {
     uint number;
     ProposalType _type;
     uint voteCycle;
+    
+    uint creationTimestamp;
+    uint voteCycleLength;
     string description;
     address creator;
 
@@ -50,8 +51,6 @@ contract CommonVoting {
 
     bool applied;
 
-    uint creationTimestamp;
-    uint voteCycleLength;
   }
 
   struct Vote {

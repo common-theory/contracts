@@ -10,8 +10,7 @@ pragma solidity ^0.4.23;
  **/
 
 contract CommonDecision {
-  uint public totalVotingMembers = 0;
-  uint public totalValue = 0;
+  uint public totalActiveMembers = 0;
 
   /**
    * A member is an entity that has a right to value/totalValue of all
@@ -23,7 +22,6 @@ contract CommonDecision {
   struct Member {
     address _address;
     bool active;
-    string link;
   }
 
   enum ProposalType { MemberUpdate, ContractUpdate, VoteCycleUpdate }
@@ -67,14 +65,10 @@ contract CommonDecision {
     uint proposalNumber
   );
 
-  Member[] members;
-  /* mapping (address => Member) public members; */
+  Member[] public members;
   mapping (address => uint256) memberIndex;
-  address[] public memberAddresses;
   mapping (address => Vote[]) public votes;
   mapping (address => mapping (uint256 => bool)) public memberProposalVotes;
-
-  mapping (address => uint256) public balances;
 
   /**
    * 30 minute vote cycles
@@ -102,14 +96,18 @@ contract CommonDecision {
     bytes32[MAX_PROPOSAL_ARG_COUNT] memory arguments;
     arguments[0] = bytes32(addr);
     arguments[1] = bytes32(1);
-    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'putMember(address, bool)', arguments);
+    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32)', arguments);
     if (_voteCycleLength != 0) {
       bytes32[MAX_PROPOSAL_ARG_COUNT] memory voteArguments;
       voteArguments[0] = bytes32(_voteCycleLength);
-      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(uint256)', voteArguments);
+      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(bytes32)', voteArguments);
       applyProposal(1);
     }
     applyProposal(0);
+  }
+
+  function () public {
+    require(false, 'Method is invalid');
   }
 
   /**
@@ -184,9 +182,9 @@ contract CommonDecision {
      * both be 0.
      *
      * The expression below evaluates as equal when totalAcceptingVotes and
-     * totalVotingMembers are both 0: 100 * 0 >= 75 * 0
+     * totalActiveMembers are both 0: 100 * 0 >= 75 * 0
      **/
-    return 100 * proposals[proposalNumber].totalAcceptingVotes >= 75 * totalVotingMembers;
+    return 100 * proposals[proposalNumber].totalAcceptingVotes >= 75 * totalActiveMembers;
   }
 
   /**
@@ -198,21 +196,7 @@ contract CommonDecision {
 
     Proposal memory proposal = proposals[proposalNumber];
     bytes4 signature = bytes4(keccak256(abi.encodePacked(proposal.functionSignature)));
-
-    // Not a big fan of this, but don't see a trivial implementation that's better
-    if (proposal.arguments.length == 0) {
-      require(proposal.targetContract.call(signature));
-    } else if (proposal.arguments.length == 1) {
-      require(proposal.targetContract.call(signature, proposal.arguments[0]));
-    } else if (proposal.arguments.length == 2) {
-      require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1]));
-    } else if (proposal.arguments.length == 3) {
-      require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2]));
-    } else {
-      // Invalid number of arguments received
-      // TODO: Throw an actual error, not silently revert
-      require(false);
-    }
+    require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2]));
     proposals[proposalNumber].applied = true;
     emit ProposalApplied(proposalNumber);
 
@@ -223,10 +207,10 @@ contract CommonDecision {
       uint newValue = proposals[proposalNumber].newValue;
       if (oldValue != 0 && newValue == 0) {
         // A voting member is being removed
-        totalVotingMembers -= 1;
+        totalActiveMembers -= 1;
       } else if (oldValue == 0 && newValue != 0) {
         // A voting member is being added
-        totalVotingMembers += 1;
+        totalActiveMembers += 1;
       }
       totalValue = totalValue - oldValue + newValue;
       members[proposals[proposalNumber].memberAddress].value = newValue;
@@ -270,8 +254,24 @@ contract CommonDecision {
   /**
    * Called when a proposal is applied
    **/
-  function updateMember(bytes32 _address, bytes32 _active) private commonDecision {
-    members[memberIndex[address(_address)]].active = (_active != 0);
+  function updateMember(bytes32 _address, bytes32 _active) public commonDecision {
+    Member memory member = Member({
+      _address: address(_address),
+      active: (_active != 0)
+    });
+    if (members[memberIndex[address(_address)]]._address != address(_address)) {
+      // new member
+      members.push(member);
+      if (member.active) totalActiveMembers++;
+      return;
+    }
+    Member memory current = members[memberIndex[address(_address)]];
+    if (current.active != member.active && member.active) {
+      totalActiveMembers++;
+    } else if (current.active != member.active) {
+      totalActiveMembers--;
+    }
+    members[memberIndex[address(_address)]] = member;
   }
 
   /**
@@ -279,10 +279,6 @@ contract CommonDecision {
    **/
   function proposalCount() public view returns (uint) {
     return proposals.length;
-  }
-
-  function memberAddressCount() public view returns (uint) {
-    return memberAddresses.length;
   }
 
   /**
@@ -309,4 +305,10 @@ contract CommonDecision {
     return false;
   }
 
+  /**
+   * Getter for members array length
+   **/
+  function memberCount() public view returns (uint) {
+    return members.length;
+  }
 }

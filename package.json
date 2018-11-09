@@ -1,5 +1,5 @@
 {
-  "name": "common-dac",
+  "name": "@ctheory/voting-logic-store",
   "version": "0.0.1",
   "description": "The common theory dac smart contract",
   "main": "index.js",
@@ -27,5 +27,16 @@
     "truffle": "^4.1.14",
     "truffle-hdwallet-provider": "0.0.6"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/common-theory/voting-logic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/common-theory/voting-logic/issues"
+  },
+  "homepage": "https://github.com/common-theory/voting-logic#readme"
 }

@@ -11,7 +11,7 @@ pragma solidity ^0.4.23;
  * participate.
  **/
 
-contract CommonDAC {
+contract CommonVoting {
   uint public totalVotingMembers = 0;
   uint public totalValue = 0;
 

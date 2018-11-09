@@ -23,6 +23,12 @@ contract CommonSyndicate {
   bool public contractUpdated = false;
   address public newContract;
 
+  /**
+   * Always settle payments forward in time, keep track of the last settled to
+   * reduce gas (loop iterations) as more payments are receieved.
+   **/
+  uint256 public lastSettledPayment = 0;
+
   struct Payment {
     address sender;
     uint256 weiValue;
@@ -111,9 +117,10 @@ contract CommonSyndicate {
    * using the correct value ratio at the time they were received.
    **/
   function settleBalances() public {
-    for (uint256 i = 0; i < payments.length; i++) {
+    for (uint256 i = lastSettledPayment; i < payments.length; i++) {
       if (payments[i].settled) continue;
       settlePayment(i);
+      lastSettledPayment = i;
     }
   }
 

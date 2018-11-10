@@ -38,7 +38,11 @@ contract CommonHosting {
 
   HostedDomain[] public domains;
 
-  constructor() public {}
+  address public decisionContract;
+
+  constructor(address _decisionContract) public {
+    decisionContract = _decisionContract;
+  }
 
   /**
    * Add a domain to the common hosting contract.

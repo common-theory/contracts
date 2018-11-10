@@ -96,7 +96,7 @@ contract CommonDecision {
     bytes32[MAX_PROPOSAL_ARG_COUNT] memory arguments;
     arguments[0] = bytes32(addr);
     arguments[1] = bytes32(1);
-    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32)', arguments);
+    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32, bytes32)', arguments);
     if (_voteCycleLength != 0) {
       bytes32[MAX_PROPOSAL_ARG_COUNT] memory voteArguments;
       voteArguments[0] = bytes32(_voteCycleLength);
@@ -195,8 +195,9 @@ contract CommonDecision {
     if (proposals[proposalNumber].applied) return;
 
     Proposal memory proposal = proposals[proposalNumber];
-    bytes4 signature = bytes4(keccak256(abi.encodePacked(proposal.functionSignature)));
-    require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2]));
+    /* bytes4 signature = bytes4(keccak256(proposal.functionSignature)); */
+    require(proposal.targetContract.call(abi.encodeWithSignature(proposal.functionSignature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2])));
+    /* require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2])); */
     proposals[proposalNumber].applied = true;
     emit ProposalApplied(proposalNumber);
 
@@ -254,24 +255,24 @@ contract CommonDecision {
   /**
    * Called when a proposal is applied
    **/
-  function updateMember(bytes32 _address, bytes32 _active) public commonDecision {
+  function updateMember(bytes32[] arguments) public {
     Member memory member = Member({
-      _address: address(_address),
-      active: (_active != 0)
+      _address: address(arguments[1]),
+      active: (arguments[0] != 0)
     });
-    if (members[memberIndex[address(_address)]]._address != address(_address)) {
+    if (members[memberIndex[member._address]]._address != member._address) {
       // new member
       members.push(member);
       if (member.active) totalActiveMembers++;
       return;
     }
-    Member memory current = members[memberIndex[address(_address)]];
+    Member memory current = members[memberIndex[member._address]];
     if (current.active != member.active && member.active) {
       totalActiveMembers++;
     } else if (current.active != member.active) {
       totalActiveMembers--;
     }
-    members[memberIndex[address(_address)]] = member;
+    members[memberIndex[member._address]] = member;
   }
 
   /**

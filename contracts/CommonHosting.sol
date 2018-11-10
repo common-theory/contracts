@@ -1,5 +1,7 @@
 pragma solidity ^0.4.23;
 
+import './StringUtils.sol';
+
 contract CommonHosting {
 
   /**
@@ -65,25 +67,12 @@ contract CommonHosting {
    **/
   function isDomainHosted(string domain) public view returns (bool) {
     for (uint256 x = 0; x < domains.length; x++) {
-      if (!stringsEqual(domain, domains[x].name)) continue;
+      if (!StringUtils.stringsEqual(domain, domains[x].name)) continue;
       return domains[x].lastPaymentTimestamp + domains[x].lastPaymentAmount / domains[x].lastHostRate > block.timestamp;
     }
     return false;
   }
 
-  /**
-   * Compare string contents
-   **/
-  function stringsEqual(string _s1, string _s2) public pure returns (bool) {
-    bytes memory str1 = bytes(_s1);
-    bytes memory str2 = bytes(_s2);
-    if (str1.length != str2.length) return false;
-    // Strings are guaranteed to be same length
-    for (uint256 x = 0; x < str1.length; x++) {
-      if (str1[x] != str2[x]) return false;
-    }
-    return true;
-  }
 
   function domainCount() public view returns (uint) {
     return domains.length;

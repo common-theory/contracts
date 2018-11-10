@@ -1,5 +1,7 @@
 pragma solidity ^0.4.23;
 
+import './StringUtils.sol';
+
 /**
  * A contract to facilitate decision making between humans.
  *
@@ -138,7 +140,7 @@ contract CommonDecision {
     // And if the current member voting is the one being updated
     if (proposal.targetContract == address(this) &&
         proposal.arguments[0] == bytes32(msg.sender) &&
-        stringContains(proposal.functionSignature, 'updateMember')) {
+        StringUtils.stringContains(proposal.functionSignature, 'updateMember')) {
       // Members can vote in favor of a change to themselves, but not against
       // This solves the edge case of 2 or 3 members trying to consensually remove 1
       require(accept);
@@ -287,23 +289,6 @@ contract CommonDecision {
    **/
   function currentVoteCycle() public view returns (uint) {
     return lastVoteCycleNumber + (block.timestamp - lastVoteCycleLengthUpdate) / voteCycleLength;
-  }
-
-  /**
-   * Determines if a string contains another string
-   **/
-  function stringContains(string _haystack, string _needle) public pure returns (bool) {
-    bytes memory haystack = bytes(_haystack);
-    bytes memory needle = bytes(_needle);
-    if (needle.length > haystack.length) return false;
-    for (uint256 x = 0; x < haystack.length; x++) {
-      if (haystack[x] != needle[0]) continue;
-      for (uint256 y = 0; y < needle.length; y++) {
-        if (haystack[x + y] != needle[y]) break;
-        if (y == needle.length - 1) return true;
-      }
-    }
-    return false;
   }
 
   /**

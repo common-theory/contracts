@@ -26,8 +26,6 @@ contract CommonDecision {
     bool active;
   }
 
-  enum ProposalType { MemberUpdate, ContractUpdate, VoteCycleUpdate }
-
   uint256 constant MAX_PROPOSAL_ARG_COUNT = 3;
   /**
    * A proposal for members to vote on. Proposals can change contract state.

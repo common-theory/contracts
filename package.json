@@ -12,7 +12,8 @@
     "coverage": "solidity-coverage && lcov-badge-generator ./coverage/lcov.info -o ./test/badge.svg",
     "upload-coverage": "jsdnslink update _dnslink.coverage.commontheory.io /ipfs/$(ipfs add -Qr ./coverage)",
     "precommit": "echo 'precommit hook disabled' || npm run coverage && git add ./test/badge.svg",
-    "test": "truffle test"
+    "test": "truffle test",
+    "diagrams": "drawio ./diagram.xml -o diagram.pdf"
   },
   "author": "Chance Hudson",
   "license": "MIT",

@@ -73,7 +73,6 @@ contract CommonHosting {
     return false;
   }
 
-
   function domainCount() public view returns (uint) {
     return domains.length;
   }

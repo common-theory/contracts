@@ -80,7 +80,6 @@ contract CommonDecision {
   uint256 public lastVoteCycleNumber;
   uint256 public genesisBlockTimestamp;
 
-
   Proposal[] public proposals;
 
   bool public contractUpdated = false;

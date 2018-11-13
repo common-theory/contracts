@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import './StringUtils.sol';
 
@@ -229,9 +229,7 @@ contract CommonDecision {
       )
       // Revert if execution fails
       // This should probably be changed to updating the proposal as failing to
-      // apply
-      mstore(0x40, success)
-      if eq(success, 0) { revert(0, 0) }
+      switch success case 0 { revert(0, 0) } default { }
       mstore(0x40, add(x, 0x64)) // clear the memory region
     }
     proposals[proposalNumber].applied = true;

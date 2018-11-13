@@ -99,7 +99,7 @@ contract CommonDecision {
     if (_voteCycleLength != 0) {
       bytes32[MAX_PROPOSAL_ARG_COUNT] memory voteArguments;
       voteArguments[0] = bytes32(_voteCycleLength);
-      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(bytes32)', voteArguments);
+      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(bytes32, bytes32, bytes32)', voteArguments);
       applyProposal(1);
     }
     applyProposal(0);
@@ -188,41 +188,54 @@ contract CommonDecision {
 
   /**
    * Proposals may be applied in the voting cycle following creation.
+   *
+   * Proposed executions must supply 3 bytes32 arguments
    **/
   function applyProposal(uint proposalNumber) public {
     require(isProposalAccepted(proposalNumber));
     if (proposals[proposalNumber].applied) return;
 
     Proposal memory proposal = proposals[proposalNumber];
-    /* bytes4 signature = bytes4(keccak256(proposal.functionSignature)); */
-    require(proposal.targetContract.call(abi.encodeWithSignature(proposal.functionSignature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2])));
-    /* require(proposal.targetContract.call(signature, proposal.arguments[0], proposal.arguments[1], proposal.arguments[2])); */
+    bytes4 signature = bytes4(keccak256(abi.encodePacked(proposal.functionSignature)));
+    bytes32 arg0 = proposal.arguments[0];
+    bytes32 arg1 = proposal.arguments[1];
+    bytes32 arg2 = proposal.arguments[2];
+    address targetContract = proposal.targetContract;
+    assembly {
+      // Setup the call at 0x40, initialize x to the start of the memory region
+      let x := mload(0x40)
+
+      // Store the 4 byte function signature at x
+      mstore(x, signature)
+      // Store arg0 4 bytes past x
+      mstore(add(x, 0x04), arg0)
+      // Store arg1 36 bytes past x
+      mstore(add(x, 0x24), arg1)
+      // Store arg2 68 bytes past x
+      mstore(add(x, 0x44), arg2)
+
+      // Full call data now resides at 0x40 - 0xA4, x is a pointer to the
+      // beginning of this region
+
+      // Execute the function, collect success as 0 or 1
+      let success := call(
+        5000, // the gas to send
+        targetContract, // target contract being executed
+        0, // Not sending any value
+        x, // argument beginning offset
+        0x64, // input is 100 bytes long (4 + 32 + 32 + 32)
+        x, // output of the call will overwrite the call data
+        0x20 // pull 32 bytes of output data
+      )
+      // Revert if execution fails
+      // This should probably be changed to updating the proposal as failing to
+      // apply
+      mstore(0x40, success)
+      if eq(success, 0) { revert(0, 0) }
+      mstore(0x40, add(x, 0x64)) // clear the memory region
+    }
     proposals[proposalNumber].applied = true;
     emit ProposalApplied(proposalNumber);
-
-    /* if (proposals[proposalNumber]._type == ProposalType.MemberUpdate) {
-      uint currentValue = members[proposals[proposalNumber].memberAddress].value;
-      uint oldValue = proposals[proposalNumber].oldValue;
-      require(oldValue == currentValue);
-      uint newValue = proposals[proposalNumber].newValue;
-      if (oldValue != 0 && newValue == 0) {
-        // A voting member is being removed
-        totalActiveMembers -= 1;
-      } else if (oldValue == 0 && newValue != 0) {
-        // A voting member is being added
-        totalActiveMembers += 1;
-      }
-      totalValue = totalValue - oldValue + newValue;
-      members[proposals[proposalNumber].memberAddress].value = newValue;
-      memberAddresses.push(proposals[proposalNumber].memberAddress);
-    } else if (proposals[proposalNumber]._type == ProposalType.ContractUpdate) {
-      contractUpdated = true;
-      newContract = proposals[proposalNumber].newContractAddress;
-    } else if (proposals[proposalNumber]._type == ProposalType.VoteCycleUpdate) {
-      voteCycleLength = proposals[proposalNumber].voteCycleLength;
-      lastVoteCycleLengthUpdate = block.timestamp;
-      lastVoteCycleNumber = currentVoteCycle();
-    } */
   }
 
   /**
@@ -254,10 +267,10 @@ contract CommonDecision {
   /**
    * Called when a proposal is applied
    **/
-  function updateMember(bytes32[] arguments) public {
+  function updateMember(bytes32 a0, bytes32 a1, bytes32) public {
     Member memory member = Member({
-      _address: address(arguments[1]),
-      active: (arguments[0] != 0)
+      _address: address(a1),
+      active: (a0 != 0)
     });
     if (members[memberIndex[member._address]]._address != member._address) {
       // new member
@@ -273,6 +286,10 @@ contract CommonDecision {
     }
     members[memberIndex[member._address]] = member;
   }
+
+  /* putVoteCycleLength(bytes32 a0, bytes32 a1, bytes32, a2) public {
+
+  } */
 
   /**
    * Public getters for array lengths

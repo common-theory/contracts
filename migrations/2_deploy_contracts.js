@@ -9,7 +9,7 @@ const StringUtils = artifacts.require('StringUtils');
  **/
 module.exports = function(deployer) {
   deployer.deploy(StringUtils)
-    .then(() => deployer.link(StringUtils, CommonDecision, CommonHosting))
+    .then(() => deployer.link(StringUtils, [CommonDecision, CommonHosting]))
     .then(() => deployer.deploy(CommonDecision, '0xAb027372B1c52e1615EDdeF59C3Ca4412bf63b9f', 30))
     .then(() => deployer.deploy(CommonSyndicate, CommonDecision.address))
     .then(() => deployer.deploy(CommonHosting, CommonDecision.address))

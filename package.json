@@ -20,6 +20,7 @@
   "devDependencies": {
     "digitalocean": "^1.2.0",
     "dnslink": "^0.2.0",
+    "draw.io-export": "0.0.1",
     "ganache-cli": "^6.1.8",
     "git-pre-commit": "^2.1.4",
     "lcov-badge-generator": "^1.0.5",

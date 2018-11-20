@@ -30,7 +30,7 @@ The current [`common-dapp`](https://github.com/common-theory/common-dapp) has _b
 
 - [`https://commontheory.io`](https://commontheory.io)
 - [`https://ipfs.io/ipns/commontheory.io`](https://ipfs.io/ipns/commontheory.io)
-- [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://commontheory.io)
+- [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://dnslink-cid-badge.commontheory.io/commontheory.io?redirect=true)
 
 Decision contracts are a means by which to improve **transparency** and force humans to **communicate**.
 

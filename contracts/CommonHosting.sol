@@ -49,7 +49,7 @@ contract CommonHosting {
   /**
    * Add a domain to the common hosting contract.
    **/
-  function storeDomain(string domain) public payable {
+  function storeDomain(string memory domain) public payable {
     domains.push(HostedDomain({
       name: domain,
       lastPaymentTimestamp: block.timestamp,
@@ -65,7 +65,7 @@ contract CommonHosting {
    * TXT records should still be verified on the server to ensure that the
    * address controlling the entry controls the domain via ethlink.
    **/
-  function isDomainHosted(string domain) public view returns (bool) {
+  function isDomainHosted(string memory domain) public view returns (bool) {
     for (uint256 x = 0; x < domains.length; x++) {
       if (!StringUtils.stringsEqual(domain, domains[x].name)) continue;
       return domains[x].lastPaymentTimestamp + domains[x].lastPaymentAmount / domains[x].lastHostRate > block.timestamp;

@@ -3,6 +3,23 @@ pragma solidity ^0.5.0;
 import './StringUtils.sol';
 
 /**
+ * An interface for other smart contracts to delegate decision making to a
+ * decision contract instance.
+ **/
+interface DecisionDelegated {
+  struct Proposal {
+    string description;
+    uint256 number;
+    address creator;
+    address decisionContract;
+    address targetContract;
+    uint256 proposalType; // Specific to the ProposalExecutor
+  }
+  function proposalTypes() external view returns (uint256);
+  function executeProposal(Proposal p) external;
+}
+
+/**
  * A contract to facilitate decision making between humans.
  *
  * Changes to members can be proposed and are voted voteCycleLength seconds.
@@ -105,8 +122,8 @@ contract CommonDecision {
     applyProposal(0);
   }
 
-  function () public {
-    require(false, 'Method is invalid');
+  function () external {
+    require(false, 'Decision contracts cannot receive funds');
   }
 
   /**
@@ -241,7 +258,7 @@ contract CommonDecision {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(string _description, address _targetContract, string _functionSignature, bytes32[MAX_PROPOSAL_ARG_COUNT] _arguments) public {
+  function createProposal(string memory _description, address _targetContract, string memory _functionSignature, bytes32[MAX_PROPOSAL_ARG_COUNT] memory _arguments) public {
     proposals.push(Proposal({
       description: _description,
       targetContract: _targetContract,

@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
 
-
 library StringUtils {
   /**
    * Compare string contents
    **/
-  function stringsEqual(string _s1, string _s2) public pure returns (bool) {
+  function stringsEqual(string memory _s1, string memory _s2) public pure returns (bool) {
     bytes memory str1 = bytes(_s1);
     bytes memory str2 = bytes(_s2);
     if (str1.length != str2.length) return false;
@@ -19,7 +18,7 @@ library StringUtils {
   /**
    * Determines if a string contains another string
    **/
-  function stringContains(string _haystack, string _needle) public pure returns (bool) {
+  function stringContains(string memory _haystack, string memory _needle) public pure returns (bool) {
     bytes memory haystack = bytes(_haystack);
     bytes memory needle = bytes(_needle);
     if (needle.length > haystack.length) return false;

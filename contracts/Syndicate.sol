@@ -1,7 +1,9 @@
 pragma solidity ^0.5.0;
 
+import "./Decision";
+
 /**
- * The CommonSyndicate contract
+ * The Syndicate contract
  *
  * A way for distributed groups of people to work together and come to consensus
  * on use of funds.
@@ -16,7 +18,7 @@ pragma solidity ^0.5.0;
  *   - Use bancor liquidity to auto diversify with ERC20 tokens upon vote
  **/
 
-contract CommonSyndicate {
+contract Syndicate is DecisionDelegated {
 
   mapping (address => uint256) public balances;
 
@@ -76,7 +78,7 @@ contract CommonSyndicate {
     }
   }
 
-  modifier commonDecision() {
+  modifier decision() {
     require(msg.sender == decisionContract);
     _;
   }
@@ -84,7 +86,7 @@ contract CommonSyndicate {
   /**
    * Make a one time payment from the syndicate
    **/
-  function sendEth(address receiver, uint256 weiValue) public commonDecision {
+  function sendEth(address receiver, uint256 weiValue) public decision {
     uint256 balance = balances[address(this)];
     require(weiValue <= balance);
     receiver.transfer(balance);
@@ -95,7 +97,7 @@ contract CommonSyndicate {
    *
    * Can only be executed by common vote
    **/
-  function putMember(address _receiving, uint256 _syndicateValue) public commonDecision {
+  function putMember(address _receiving, uint256 _syndicateValue) public decision {
     // Before we adjust syndicate values settle any outstanding payments
     settleBalances();
 

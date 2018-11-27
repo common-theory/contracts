@@ -10,13 +10,17 @@ interface DecisionDelegated {
   struct Proposal {
     string description;
     uint256 number;
+    uint256 voteCycle;
     address creator;
+    uint256 creationTimestamp;
+    address delegatedContract;
+    uint256 action;
+    bytes32[MAX_PROPOSAL_ARG_COUNT] payload;
     address decisionContract;
-    address targetContract;
-    uint256 proposalType; // Specific to the ProposalExecutor
   }
   function proposalTypes() external view returns (uint256);
   function executeProposal(Proposal p) external;
+  function decisionContract() external view returns (address);
 }
 
 /**
@@ -28,7 +32,7 @@ interface DecisionDelegated {
  * participate.
  **/
 
-contract CommonDecision {
+contract Decision {
   uint public totalActiveMembers = 0;
 
   /**
@@ -43,7 +47,6 @@ contract CommonDecision {
     bool active;
   }
 
-  uint256 constant MAX_PROPOSAL_ARG_COUNT = 3;
   /**
    * A proposal for members to vote on. Proposals can change contract state.
    **/

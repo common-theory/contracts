@@ -22,7 +22,7 @@ Syndicates are a means by which to improve **fairness** and **efficiency** in fi
 
 ## Decision
 
-Syndicates are operated by decision contracts. Decision contracts allow members to create and vote on proposals to execute functions in themselves other contracts (in this case a syndicate).
+Syndicates are operated by decision contracts. Decision contracts allow members to create and vote on proposals to execute functions in themselves and other contracts (in this case a Syndicate).
 
 Decision contracts have members, the creator being the first member. Decisions can only be made unanimously and must have at least 75% voter participation. Members cannot vote against changes to their own membership; a member cannot be voted out against their will until at least 4 people are present (75% voter participation).
 

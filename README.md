@@ -12,9 +12,9 @@ Syndicate
 noun - a group of individuals or syndicates combined to promote some common interest
 ```
 
-Syndicates can send and receive [ether](https://coinmarketcap.com/currencies/ethereum/) or [ERC-20 tokens](https://etherscan.io/tokens) two ways:
+Syndicates can send and receive [ether](https://coinmarketcap.com/currencies/ethereum/) two ways:
   - lump sum - sends a one time payment to a syndicate or individual (e.g. 1 ether to address `0x...`)
-  - per second - sends a fixed amount over a period of time (e.g. 5000 [`dai`](https://makerdao.com/dai) over 30 days to address `0x...`)
+  - per second - sends a fixed amount over a period of time (e.g. 5 ether over 30 days to address `0x...`)
 
 Syndicates do not allow debt by default. All transactions are guaranteed to complete; funds are locked once committed.
 

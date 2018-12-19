@@ -2,7 +2,7 @@
 
 The common-theory contracts, with an overview of use.
 
-_Alpha development in progress in [`#8`](https://github.com/common-theory/contracts/pull/8)_
+_Alpha development in progress in [`#10`](https://github.com/common-theory/contracts/pull/10)_
 
 ## Syndicate
 

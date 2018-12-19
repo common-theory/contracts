@@ -12,9 +12,9 @@ Syndicate
 noun - a group of individuals or syndicates combined to promote some common interest
 ```
 
-Syndicates can send and receive [ether](https://coinmarketcap.com/currencies/ethereum/) or [ERC-20 tokens](https://etherscan.io/tokens) two ways:
+Syndicates can send and receive [ether](https://coinmarketcap.com/currencies/ethereum/) two ways:
   - lump sum - sends a one time payment to a syndicate or individual (e.g. 1 ether to address `0x...`)
-  - per second - sends a fixed amount over a period of time (e.g. 5000 [`dai`](https://makerdao.com/dai) over 30 days to address `0x...`)
+  - per second - sends a fixed amount over a period of time (e.g. 5 ether over 30 days to address `0x...`)
 
 Syndicates do not allow debt by default. All transactions are guaranteed to complete; funds are locked once committed.
 
@@ -22,7 +22,7 @@ Syndicates are a means by which to improve **fairness** and **efficiency** in fi
 
 ## Decision
 
-Syndicates are operated by decision contracts. Decision contracts allow members to create and vote on proposals to execute functions in themselves other contracts (in this case a syndicate).
+Syndicates are operated by decision contracts. Decision contracts allow members to create and vote on proposals to execute functions in themselves and other contracts (in this case a Syndicate).
 
 Decision contracts have members, the creator being the first member. Decisions can only be made unanimously and must have at least 75% voter participation. Members cannot vote against changes to their own membership; a member cannot be voted out against their will until at least 4 people are present (75% voter participation).
 
@@ -30,7 +30,7 @@ The current [`common-dapp`](https://github.com/common-theory/common-dapp) has _b
 
 - [`https://commontheory.io`](https://commontheory.io)
 - [`https://ipfs.io/ipns/commontheory.io`](https://ipfs.io/ipns/commontheory.io)
-- [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://commontheory.io)
+- [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://dnslink-cid-badge.commontheory.io/commontheory.io?redirect=true)
 
 Decision contracts are a means by which to improve **transparency** and force humans to **communicate**.
 

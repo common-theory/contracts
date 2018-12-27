@@ -33,12 +33,6 @@ contract Syndicate {
 
   Payment[] public payments;
 
-  address public decisionContract;
-
-  constructor(address _decisionContract) public {
-    decisionContract = _decisionContract;
-  }
-
   /**
    * Default payment function. Adds an unsettled payment entry, or forwards the
    * payment to the updated contract (if an update proposal has passed).

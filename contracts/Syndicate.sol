@@ -26,21 +26,12 @@ contract Syndicate is DecisionDelegated {
 
   struct Payment {
     address sender;
-    uint256 weiValue;
+    address receiver;
+    uint256 timestamp;
     uint256 timeLength;
-    bool settled;
+    uint256 weiValue;
+    uint256 weiPaid;
   }
-
-  /**
-   * The contract itself can be stored as a member of the syndicate
-   **/
-  struct Member {
-    address receiving;
-    uint256 syndicateValue;
-  }
-  // The first member should always be the contract itself
-  Member[] public members;
-  mapping (address => uint256) memberIndex;
 
   Payment[] public payments;
 
@@ -48,10 +39,6 @@ contract Syndicate is DecisionDelegated {
 
   constructor(address _decisionContract) public {
     decisionContract = _decisionContract;
-    members.push(Member({
-      receiving: address(this),
-      syndicateValue: 100
-    }));
   }
 
   /**
@@ -63,11 +50,14 @@ contract Syndicate is DecisionDelegated {
       // revert the transaction, don't let ether be sent here if we've updated
       require(false);
     }
+    balances[msg.sender] += msg.value;
     payments.push(Payment({
       sender: msg.sender,
-      weiValue: msg.value,
+      receiver: address(this),
+      timestamp: block.timestamp,
       timeLength: 0,
-      settled: true
+      weiValue: msg.value,
+      weiPaid: 0
     }));
   }
 
@@ -79,86 +69,71 @@ contract Syndicate is DecisionDelegated {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address receiver, uint256 _weiValue, uint256 _timeLength, address _sender) public {
+  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength, address _sender) public {
     uint256 balance = balances[_sender];
     // Verify that the balance is there
     require(_weiValue <= balance);
     payments.push(Payment({
       sender: address(this),
-      weiValue: _weiValue,
+      receiver: _receiver,
+      timestamp: block.timestamp,
       timeLength: _timeLength,
-      settled: false
+      weiValue: _weiValue,
+      weiPaid: 0
     }));
-    settlePayment(payments.length - 1);
+    settlePayment(paymentCount() - 1);
   }
 
   /**
    * Overloaded pay function with current contract as default sender.
    **/
-  function pay(address receiver, uint256 _weiValue, uint256 _timeLength) public decision {
-    // Kick to the pay function with the current contract as the sender
-    pay(receiver, _weiValue, _timeLength, address(this));
+  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public decision {
+    pay(_receiver, _weiValue, _timeLength, address(this));
   }
 
   /**
-   * Set values for a member
+   * Settle an individual payment at the current point in time.
    *
-   * Can only be executed by common vote
+   * Can be called multiple times for payments
+   * over time.
    **/
-  function putMember(address _receiving, uint256 _syndicateValue) public decision {
-    // Before we adjust syndicate values settle any outstanding payments
-    settleBalances();
-
-    Member memory member = Member({
-      receiving: _receiving,
-      syndicateValue: _syndicateValue
-    });
-    if (isMember(_receiving)) {
-      // We're updating an existing member
-      totalSyndicateValue -= members[memberIndex[_receiving]].syndicateValue;
-      members[memberIndex[_receiving]] = member;
-      totalSyndicateValue += _syndicateValue;
-    } else {
-      // We're adding a new member
-      members.push(member);
-      totalSyndicateValue += _syndicateValue;
-    }
+  function paymentSettle(uint256 index) public {
+    if (paymentWeiOwed(index) <= 0) return;
+    uint256 owedWei = paymentWeiOwed(index);
+    balances[payments[index].receiver] += owedWei;
   }
 
   /**
-   * Determine if the supplied address has previously been added to this
-   * syndicate
+   * Return the wei owed on a payment at the current block timestamp.
    **/
-  function isMember(address receiving) public view returns (bool) {
-    return (memberIndex[receiving] != 0 || receiving == address(this));
+  function paymentWeiOwed(uint256 index) public readonly returns (uint256) {
+    // Ensure index is in range
+    require(index >= 0);
+    require(index < paymentCount());
+    Payment memory payment = payments[index];
+    // If the payment timeLength is 0 just return the amount owed
+    if (payment.timeLength == 0) {
+      return payment.weiValue - payment.weiPaid;
+    }
+    uint256 weiPerSecond = payment.weiValue / payment.timeLength;
+    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.timeLength);
+    return min(owedSeconds * weiPerSecond, payment.weiValue - payment.weiPaid);
   }
 
-  /**
-   * Settles all outstanding payments into member balances. Should be used prior
-   * to modifying value information to ensure funds are always distributed
-   * using the correct value ratio at the time they were received.
-   **/
-  function settleBalances() public {
-    for (uint256 i = lastSettledPayment; i < payments.length; i++) {
-      if (payments[i].settled) continue;
-      settlePayment(i);
-      lastSettledPayment = i;
-    }
+  function isPaymentSettled(uint256 index) public readonly returns (bool) {
+    // Ensure index is in range
+    require(index >= 0);
+    require(index < paymentCount());
+    Payment memory payment = payments[index];
+    return payment.weiValue == payment.weiPaid;
   }
 
-  /**
-   * Settles a specific payment into smart contract balances
-   **/
-  function settlePayment(uint256 index) public {
-    uint256 totalDistributedWei = 0;
-    for (uint256 i = 0; i < members.length; i++) {
-      if (members[i].syndicateValue == 0) continue;
-      uint256 owedWei = payments[index].weiValue * members[i].syndicateValue / totalSyndicateValue;
-      totalDistributedWei += owedWei;
-      balances[members[i].receiving] += owedWei;
-    }
-    require(totalDistributedWei == payments[index].weiValue);
-    payments[index].settled = true;
+  function max(uint a, uint b) private pure returns (uint) {
+    return a > b ? a : b;
+  }
+
+  function min(uint a, uint b) private pure returns (uint) {
+    return a < b ? a : b;
   }
 
   /**

@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import './StringUtils.sol';
+import './Syndicate.sol';
 
 /**
  * An interface for other smart contracts to delegate decision making to a

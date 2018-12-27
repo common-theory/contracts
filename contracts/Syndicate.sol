@@ -110,6 +110,9 @@ contract Syndicate {
     return min(owedSeconds * weiPerSecond, payment.weiValue - payment.weiPaid);
   }
 
+  /**
+   * Accessor for determining if a given payment is fully settled.
+   **/
   function isPaymentSettled(uint256 index) public view returns (bool) {
     // Ensure index is in range
     require(index >= 0);

@@ -65,7 +65,7 @@ contract Syndicate {
   }
 
   /**
-   * Overloaded pay function with current contract as default sender.
+   * Overloaded pay function with msg.sender as default sender.
    **/
   function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public {
     pay(_receiver, _weiValue, _timeLength, msg.sender);
@@ -111,28 +111,20 @@ contract Syndicate {
   }
 
   /**
-   * Withdraw balance from address to address.
+   * Withdraw balance from msg.sender to address.
    **/
-  function withdraw(address payable from, address payable to) public {
-    // Only allow sender to do custom withdrawals for self
-    require(msg.sender == from);
+  function withdraw(address payable to) public {
+    address from = msg.sender;
     if (balances[from] == 0) return;
     to.transfer(balances[from]);
     balances[from] = 0;
   }
 
   /**
-   * Single argument, withdraws to address from sender
-   **/
-  function withdraw(address payable to) public {
-    withdraw(msg.sender, to);
-  }
-
-  /**
    * No arguments, withdraws to sender from sender
    **/
   function withdraw() public {
-    withdraw(msg.sender, msg.sender);
+    withdraw(msg.sender);
   }
 
   /**

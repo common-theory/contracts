@@ -78,9 +78,7 @@ contract Syndicate {
    * over time.
    **/
   function paymentSettle(uint256 index) public {
-    if (paymentWeiOwed(index) <= 0) return;
-    uint256 owedWei = paymentWeiOwed(index);
-    balances[payments[index].receiver] += owedWei;
+    balances[payments[index].receiver] += paymentWeiOwed(index);
   }
 
   /**

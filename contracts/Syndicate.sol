@@ -28,10 +28,9 @@ contract Syndicate is DecisionDelegated {
   struct Payment {
     address sender;
     uint256 weiValue;
+    uint256 timeLength;
     bool settled;
   }
-
-  uint256 public totalSyndicateValue = 0;
 
   /**
    * The contract itself can be stored as a member of the syndicate
@@ -78,12 +77,27 @@ contract Syndicate is DecisionDelegated {
   }
 
   /**
-   * Make a one time payment from the syndicate
+   * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function sendEth(address receiver, uint256 weiValue) public decision {
-    uint256 balance = balances[address(this)];
-    require(weiValue <= balance);
-    receiver.transfer(balance);
+  function pay(address receiver, uint256 _weiValue, uint256 _timeLength, address _sender) public {
+    uint256 balance = balances[_sender];
+    // Verify that the balance is there
+    require(_weiValue <= balance);
+    payments.push(Payment({
+      sender: address(this),
+      weiValue: _weiValue,
+      timeLength: _timeLength,
+      settled: false
+    }));
+    settlePayment(payments.length - 1);
+  }
+
+  /**
+   * Overloaded pay function with current contract as default sender.
+   **/
+  function pay(address receiver, uint256 _weiValue, uint256 _timeLength) public decision {
+    // Kick to the pay function with the current contract as the sender
+    pay(receiver, _weiValue, _timeLength, address(this));
   }
 
   /**

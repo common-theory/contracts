@@ -4,30 +4,7 @@ import './StringUtils.sol';
 import './Syndicate.sol';
 
 /**
- * An interface for other smart contracts to delegate decision making to a
- * decision contract instance.
- **/
-interface DecisionDelegated {
-  struct Proposal {
-    string description;
-    uint256 number;
-    uint256 voteCycle;
-    address creator;
-    uint256 creationTimestamp;
-    address delegatedContract;
-    uint256 action;
-    bytes32[MAX_PROPOSAL_ARG_COUNT] payload;
-    address decisionContract;
-  }
-  function proposalTypes() external view returns (uint256);
-  function executeProposal(Proposal p) external;
-  function decisionContract() external view returns (address);
-}
-
-/**
  * A contract to facilitate decision making between humans.
- *
- * Changes to members can be proposed and are voted voteCycleLength seconds.
  *
  * Votes are successful only if 100% of voters agree, and at least 75% of voters
  * participate.
@@ -60,9 +37,8 @@ contract Decision {
 
     /* Input values */
     string description;
-    address targetContract;
-    string functionSignature;
-    bytes32[MAX_PROPOSAL_ARG_COUNT] arguments;
+    address receiver;
+    uint256 weiValue;
 
     /* State info */
     uint totalAcceptingVotes;
@@ -105,20 +81,22 @@ contract Decision {
 
   bool public contractUpdated = false;
   address public newContract;
+  address syndicate;
 
-  constructor(address addr, uint _voteCycleLength) public {
+  constructor(address _syndicate, address _member uint _voteCycleLength) public {
+    syndicate = _syndicate;
     genesisBlockTimestamp = block.timestamp;
     lastVoteCycleLengthUpdate = block.timestamp;
     lastVoteCycleNumber = 0;
     /**
      * Proposals can be applied immediately when there are 0 members.
      **/
-    bytes32[MAX_PROPOSAL_ARG_COUNT] memory arguments;
+    bytes32[3] memory arguments;
     arguments[0] = bytes32(addr);
     arguments[1] = bytes32(1);
     createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32, bytes32)', arguments);
     if (_voteCycleLength != 0) {
-      bytes32[MAX_PROPOSAL_ARG_COUNT] memory voteArguments;
+      bytes32[3] memory voteArguments;
       voteArguments[0] = bytes32(_voteCycleLength);
       createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(bytes32, bytes32, bytes32)', voteArguments);
       applyProposal(1);
@@ -262,7 +240,7 @@ contract Decision {
    *
    * Proposals will be included in the _next_ voting cycle.
    **/
-  function createProposal(string memory _description, address _targetContract, string memory _functionSignature, bytes32[MAX_PROPOSAL_ARG_COUNT] memory _arguments) public {
+  function createProposal(string memory _description, address _targetContract, string memory _functionSignature, bytes32[3] memory _arguments) public {
     proposals.push(Proposal({
       description: _description,
       targetContract: _targetContract,

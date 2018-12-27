@@ -17,7 +17,6 @@ contract Syndicate is DecisionDelegated {
   mapping (address => uint256) public balances;
 
   bool public contractUpdated = false;
-  address public newContract;
 
   /**
    * Always settle payments forward in time, keep track of the last settled to
@@ -61,14 +60,15 @@ contract Syndicate is DecisionDelegated {
    **/
   function() public payable {
     if (contractUpdated) {
-      newContract.transfer(msg.value);
-    } else {
-      payments.push(Payment({
-        sender: msg.sender,
-        weiValue: msg.value,
-        settled: false
-      }));
+      // revert the transaction, don't let ether be sent here if we've updated
+      require(false);
     }
+    payments.push(Payment({
+      sender: msg.sender,
+      weiValue: msg.value,
+      timeLength: 0,
+      settled: true
+    }));
   }
 
   modifier decision() {

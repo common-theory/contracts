@@ -107,11 +107,15 @@ contract Syndicate {
   /**
    * Withdraw balance from msg.sender to address.
    **/
-  function withdraw(address payable to) public {
+  function withdraw(uint256 weiValue, address payable to, uint256[] indexesToSettle) public {
+    // Settle any supplied payment indexes
+    // This allows for lazy balance updates at withdrawal time
+    for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(i);
+
     address from = msg.sender;
-    if (balances[from] == 0) return;
-    to.transfer(balances[from]);
-    balances[from] = 0;
+    require(balances[from] >= weiValue);
+    to.transfer(weiValue);
+    balances[from] -= weiValue;
   }
 
   /**

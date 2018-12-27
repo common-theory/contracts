@@ -17,6 +17,8 @@
   "author": "Chance Hudson",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^10.12.18",
+    "@types/web3": "^1.0.14",
     "digitalocean": "^1.2.0",
     "dnslink": "^0.2.0",
     "draw.io-export": "0.0.1",
@@ -28,7 +30,10 @@
     "truffle": "5.0.0-beta.2",
     "truffle-hdwallet-provider": "0.0.6"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mobx": "^5.8.0",
+    "web3": "^1.0.0-beta.37"
+  },
   "directories": {
     "test": "test"
   },

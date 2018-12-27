@@ -127,12 +127,28 @@ contract Syndicate {
   }
 
   /**
-   * Withdraw the balance for the calling address.
+   * Withdraw balance from address to address.
+   **/
+  function withdraw(address from, address to) public {
+    // Only allow sender to do custom withdrawals for self
+    require(msg.sender == from);
+    if (balances[from] == 0) return;
+    to.transfer(balances[from]);
+    balances[from] = 0;
+  }
+
+  /**
+   * Single argument, withdraws to address from sender
+   **/
+  function withdraw(address to) public {
+    withdraw(msg.sender, to);
+  }
+
+  /**
+   * No arguments, withdraws to sender from sender
    **/
   function withdraw() public {
-    if (balances[msg.sender] == 0) return;
-    msg.sender.transfer(balances[msg.sender]);
-    balances[msg.sender] = 0;
+    withdraw(msg.sender, msg.sender);
   }
 
   /**

@@ -20,7 +20,7 @@ contract Syndicate {
     address sender;
     address receiver;
     uint256 timestamp;
-    uint256 seconds;
+    uint256 time;
     uint256 weiValue;
     uint256 weiPaid;
   }
@@ -40,7 +40,7 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _seconds, address _sender) public {
+  function pay(address _receiver, uint256 _weiValue, uint256 _time, address _sender) public {
     uint256 balance = balances[_sender];
     // Verify that the balance is there
     require(_weiValue <= balance);
@@ -48,7 +48,7 @@ contract Syndicate {
       sender: address(this),
       receiver: _receiver,
       timestamp: block.timestamp,
-      seconds: _seconds,
+      time: _time,
       weiValue: _weiValue,
       weiPaid: 0
     }));
@@ -61,8 +61,8 @@ contract Syndicate {
   /**
    * Overloaded pay function with msg.sender as default sender.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _seconds) public {
-    pay(_receiver, _weiValue, _seconds, msg.sender);
+  function pay(address _receiver, uint256 _weiValue, uint256 _time) public {
+    pay(_receiver, _weiValue, _time, msg.sender);
   }
 
   /**
@@ -84,12 +84,12 @@ contract Syndicate {
     if (isPaymentSettled(index)) return 0;
     Payment memory payment = payments[index];
 
-    // If the payment seconds is 0 just return the amount owed
-    if (payment.seconds == 0) return payment.weiValue - payment.weiPaid;
+    // If the payment time is 0 just return the amount owed
+    if (payment.time == 0) return payment.weiValue - payment.weiPaid;
 
     // Calculate owed wei based on current time and total wei owed/paid
-    uint256 weiPerSecond = payment.weiValue / payment.seconds;
-    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.seconds);
+    uint256 weiPerSecond = payment.weiValue / payment.time;
+    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.time);
     return min(max(0, weiPerSecond * owedSeconds - payment.weiPaid), payment.weiValue - payment.weiPaid);
   }
 
@@ -107,7 +107,7 @@ contract Syndicate {
   /**
    * Withdraw balance from msg.sender to address.
    **/
-  function withdraw(uint256 weiValue, address payable to, uint256[] indexesToSettle) public {
+  function withdraw(uint256 weiValue, address payable to, uint256[] memory indexesToSettle) public {
     // Settle any supplied payment indexes
     // This allows for lazy balance updates at withdrawal time
     for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(i);
@@ -121,22 +121,25 @@ contract Syndicate {
   /**
    * Two arguments, weiValue and to address.
    **/
-  function withdraw(uint256 weiValue, address payable to) {
-    withdraw(weiValue, to, []);
+  function withdraw(uint256 weiValue, address payable to) public {
+    uint256[] memory indexesToSettle;
+    withdraw(weiValue, to, indexesToSettle);
   }
 
   /**
    * One argument, weiValue.
    **/
   function withdraw(uint256 weiValue) public {
-    withdraw(weiValue, msg.sender, []);
+    uint256[] memory indexesToSettle;
+    withdraw(weiValue, msg.sender, indexesToSettle);
   }
 
   /**
    * No arguments, withdraws full balance to sender from sender balance.
    **/
   function withdraw() public {
-    withdraw(balances[msg.sender], msg.sender, []);
+    uint256[] memory indexesToSettle;
+    withdraw(balances[msg.sender], msg.sender, indexesToSettle);
   }
 
   /**

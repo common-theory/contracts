@@ -83,7 +83,7 @@ contract Decision {
   address public newContract;
   address syndicate;
 
-  constructor(address _syndicate, address _member uint _voteCycleLength) public {
+  constructor(address _syndicate, address _member, uint _voteCycleLength) public {
     syndicate = _syndicate;
     genesisBlockTimestamp = block.timestamp;
     lastVoteCycleLengthUpdate = block.timestamp;
@@ -92,7 +92,7 @@ contract Decision {
      * Proposals can be applied immediately when there are 0 members.
      **/
     bytes32[3] memory arguments;
-    arguments[0] = bytes32(addr);
+    arguments[0] = bytes32(_member);
     arguments[1] = bytes32(1);
     createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32, bytes32)', arguments);
     if (_voteCycleLength != 0) {

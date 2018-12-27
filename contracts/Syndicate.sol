@@ -1,7 +1,5 @@
 pragma solidity ^0.5.0;
 
-import "./Decision";
-
 /**
  * The Syndicate contract
  *
@@ -12,7 +10,7 @@ import "./Decision";
  * a group of individuals or syndicates combined to promote some common interest
  **/
 
-contract Syndicate is DecisionDelegated {
+contract Syndicate {
 
   mapping (address => uint256) public balances;
 
@@ -46,10 +44,8 @@ contract Syndicate is DecisionDelegated {
    * payment to the updated contract (if an update proposal has passed).
    **/
   function() public payable {
-    if (contractUpdated) {
-      // revert the transaction, don't let ether be sent here if we've updated
-      require(false);
-    }
+    // revert the transaction, don't let ether be sent here if we've updated
+    if (contractUpdated) require(false);
     balances[msg.sender] += msg.value;
     payments.push(Payment({
       sender: msg.sender,
@@ -59,11 +55,7 @@ contract Syndicate is DecisionDelegated {
       weiValue: msg.value,
       weiPaid: 0
     }));
-  }
-
-  modifier decision() {
-    require(msg.sender == decisionContract);
-    _;
+    paymentSettle(paymentCount() - 1);
   }
 
   /**
@@ -81,13 +73,13 @@ contract Syndicate is DecisionDelegated {
       weiValue: _weiValue,
       weiPaid: 0
     }));
-    settlePayment(paymentCount() - 1);
+    paymentSettle(paymentCount() - 1);
   }
 
   /**
    * Overloaded pay function with current contract as default sender.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public decision {
+  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public {
     pay(_receiver, _weiValue, _timeLength, address(this));
   }
 
@@ -111,10 +103,11 @@ contract Syndicate is DecisionDelegated {
     require(index >= 0);
     require(index < paymentCount());
     Payment memory payment = payments[index];
+
     // If the payment timeLength is 0 just return the amount owed
-    if (payment.timeLength == 0) {
-      return payment.weiValue - payment.weiPaid;
-    }
+    if (payment.timeLength == 0) return payment.weiValue - payment.weiPaid;
+
+    // Calculate owed wei based on current time and total wei owed/paid
     uint256 weiPerSecond = payment.weiValue / payment.timeLength;
     uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.timeLength);
     return min(owedSeconds * weiPerSecond, payment.weiValue - payment.weiPaid);

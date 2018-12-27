@@ -119,10 +119,24 @@ contract Syndicate {
   }
 
   /**
-   * No arguments, withdraws to sender from sender
+   * Two arguments, weiValue and to address.
+   **/
+  function withdraw(uint256 weiValue, address payable to) {
+    withdraw(weiValue, to, []);
+  }
+
+  /**
+   * One argument, weiValue.
+   **/
+  function withdraw(uint256 weiValue) public {
+    withdraw(weiValue, msg.sender, []);
+  }
+
+  /**
+   * No arguments, withdraws full balance to sender from sender balance.
    **/
   function withdraw() public {
-    withdraw(msg.sender);
+    withdraw(balances[msg.sender], msg.sender, []);
   }
 
   /**

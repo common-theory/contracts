@@ -9,13 +9,7 @@ import "./Decision";
  * on use of funds.
  *
  * syndicate - noun
- * a group of individuals or organizations combined to promote some common interest
- **/
-
-/**
- * Things it would be cool to be able to do:
- *   - Vote to move syndicate money into DAI
- *   - Use bancor liquidity to auto diversify with ERC20 tokens upon vote
+ * a group of individuals or syndicates combined to promote some common interest
  **/
 
 contract Syndicate is DecisionDelegated {

@@ -118,14 +118,6 @@ contract Syndicate {
     return payment.weiValue == payment.weiPaid;
   }
 
-  function max(uint a, uint b) private pure returns (uint) {
-    return a > b ? a : b;
-  }
-
-  function min(uint a, uint b) private pure returns (uint) {
-    return a < b ? a : b;
-  }
-
   /**
    * Withdraw balance from address to address.
    **/
@@ -158,4 +150,17 @@ contract Syndicate {
     return payments.length;
   }
 
+  /**
+   * Return the larger of two values.
+   **/
+  function max(uint a, uint b) private pure returns (uint) {
+    return a > b ? a : b;
+  }
+
+  /**
+   * Return the smaller of two values.
+   **/
+  function min(uint a, uint b) private pure returns (uint) {
+    return a < b ? a : b;
+  }
 }

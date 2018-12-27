@@ -41,15 +41,6 @@ contract Syndicate {
     // revert the transaction, don't let ether be sent here if we've updated
     if (contractUpdated) require(false);
     balances[msg.sender] += msg.value;
-    payments.push(Payment({
-      sender: msg.sender,
-      receiver: address(this),
-      timestamp: block.timestamp,
-      timeLength: 0,
-      weiValue: msg.value,
-      weiPaid: 0
-    }));
-    paymentSettle(paymentCount() - 1);
   }
 
   /**
@@ -77,7 +68,7 @@ contract Syndicate {
    * Overloaded pay function with current contract as default sender.
    **/
   function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public {
-    pay(_receiver, _weiValue, _timeLength, address(this));
+    pay(_receiver, _weiValue, _timeLength, msg.sender);
   }
 
   /**

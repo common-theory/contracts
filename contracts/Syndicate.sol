@@ -37,7 +37,7 @@ contract Syndicate {
    * Default payment function. Adds an unsettled payment entry, or forwards the
    * payment to the updated contract (if an update proposal has passed).
    **/
-  function() public payable {
+  function() external payable {
     // revert the transaction, don't let ether be sent here if we've updated
     if (contractUpdated) require(false);
     balances[msg.sender] += msg.value;
@@ -95,7 +95,7 @@ contract Syndicate {
   /**
    * Return the wei owed on a payment at the current block timestamp.
    **/
-  function paymentWeiOwed(uint256 index) public readonly returns (uint256) {
+  function paymentWeiOwed(uint256 index) public view returns (uint256) {
     // Ensure index is in range
     require(index >= 0);
     require(index < paymentCount());
@@ -110,7 +110,7 @@ contract Syndicate {
     return min(owedSeconds * weiPerSecond, payment.weiValue - payment.weiPaid);
   }
 
-  function isPaymentSettled(uint256 index) public readonly returns (bool) {
+  function isPaymentSettled(uint256 index) public view returns (bool) {
     // Ensure index is in range
     require(index >= 0);
     require(index < paymentCount());
@@ -121,7 +121,7 @@ contract Syndicate {
   /**
    * Withdraw balance from address to address.
    **/
-  function withdraw(address from, address to) public {
+  function withdraw(address payable from, address payable to) public {
     // Only allow sender to do custom withdrawals for self
     require(msg.sender == from);
     if (balances[from] == 0) return;
@@ -132,7 +132,7 @@ contract Syndicate {
   /**
    * Single argument, withdraws to address from sender
    **/
-  function withdraw(address to) public {
+  function withdraw(address payable to) public {
     withdraw(msg.sender, to);
   }
 

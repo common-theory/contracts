@@ -74,20 +74,20 @@ contract Syndicate {
   /**
    * Settle an individual payment at the current point in time.
    *
-   * Can be called multiple times for payments
-   * over time.
+   * Can be called multiple times for payments over time.
    **/
   function paymentSettle(uint256 index) public {
-    balances[payments[index].receiver] += paymentWeiOwed(index);
+    uint256 owedWei = paymentWeiOwed(index);
+    balances[payments[index].receiver] += owedWei;
+    payments[index].weiPaid += owedWei;
   }
 
   /**
    * Return the wei owed on a payment at the current block timestamp.
    **/
   function paymentWeiOwed(uint256 index) public view returns (uint256) {
-    // Ensure index is in range
-    require(index >= 0);
-    require(index < paymentCount());
+    // Return 0 if the payment is fully paid out
+    if (isPaymentSettled(index)) return 0;
     Payment memory payment = payments[index];
 
     // If the payment timeLength is 0 just return the amount owed

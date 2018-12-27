@@ -26,7 +26,7 @@ contract Syndicate {
     address sender;
     address receiver;
     uint256 timestamp;
-    uint256 timeLength;
+    uint256 seconds;
     uint256 weiValue;
     uint256 weiPaid;
   }
@@ -46,7 +46,7 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength, address _sender) public {
+  function pay(address _receiver, uint256 _weiValue, uint256 _seconds, address _sender) public {
     uint256 balance = balances[_sender];
     // Verify that the balance is there
     require(_weiValue <= balance);
@@ -54,7 +54,7 @@ contract Syndicate {
       sender: address(this),
       receiver: _receiver,
       timestamp: block.timestamp,
-      timeLength: _timeLength,
+      seconds: _seconds,
       weiValue: _weiValue,
       weiPaid: 0
     }));
@@ -67,8 +67,8 @@ contract Syndicate {
   /**
    * Overloaded pay function with msg.sender as default sender.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _timeLength) public {
-    pay(_receiver, _weiValue, _timeLength, msg.sender);
+  function pay(address _receiver, uint256 _weiValue, uint256 _seconds) public {
+    pay(_receiver, _weiValue, _seconds, msg.sender);
   }
 
   /**
@@ -90,12 +90,12 @@ contract Syndicate {
     if (isPaymentSettled(index)) return 0;
     Payment memory payment = payments[index];
 
-    // If the payment timeLength is 0 just return the amount owed
-    if (payment.timeLength == 0) return payment.weiValue - payment.weiPaid;
+    // If the payment seconds is 0 just return the amount owed
+    if (payment.seconds == 0) return payment.weiValue - payment.weiPaid;
 
     // Calculate owed wei based on current time and total wei owed/paid
-    uint256 weiPerSecond = payment.weiValue / payment.timeLength;
-    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.timeLength);
+    uint256 weiPerSecond = payment.weiValue / payment.seconds;
+    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.seconds);
     return min(owedSeconds * weiPerSecond, payment.weiValue - payment.weiPaid);
   }
 

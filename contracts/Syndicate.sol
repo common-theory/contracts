@@ -67,6 +67,9 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0
     }));
+    // Update the balance value of the sender to effectively lock the funds in place
+    balances[_sender] -= _weiValue;
+    // Attempt instant payment settlement
     paymentSettle(paymentCount() - 1);
   }
 

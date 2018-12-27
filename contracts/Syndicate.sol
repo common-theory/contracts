@@ -16,12 +16,6 @@ contract Syndicate {
 
   bool public contractUpdated = false;
 
-  /**
-   * Always settle payments forward in time, keep track of the last settled to
-   * reduce gas (loop iterations) as more payments are receieved.
-   **/
-  uint256 public lastSettledPayment = 0;
-
   struct Payment {
     address sender;
     address receiver;

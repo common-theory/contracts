@@ -45,7 +45,7 @@ contract Syndicate {
     // Verify that the balance is there
     require(_weiValue <= balance);
     payments.push(Payment({
-      sender: address(this),
+      sender: _sender,
       receiver: _receiver,
       timestamp: block.timestamp,
       time: _time,

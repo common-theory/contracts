@@ -41,7 +41,7 @@ contract Syndicate {
    * Deposit to a given address.
    **/
   function deposit(address _receiver) external payable {
-    deposit(_receiver, 0);
+    this.deposit(_receiver, 0);
   }
 
   /**
@@ -50,7 +50,7 @@ contract Syndicate {
    **/
   function() external payable {
     balances[msg.sender] += msg.value;
-    deposit(msg.sender, 0);
+    this.deposit(msg.sender, 0);
   }
 
   /**

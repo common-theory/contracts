@@ -83,15 +83,15 @@ contract Decision {
 
   bool public contractUpdated = false;
   address public newContract;
-  address syndicate;
+  address payable syndicate;
 
-  constructor(address _syndicate) public {
+  constructor(address payable _syndicate) public {
     syndicate = _syndicate;
   }
 
   function () external payable {
     Syndicate s = Syndicate(syndicate);
-    s.deposit.value(msg.value)(address(this));
+    s.deposit.value(msg.value)(address(this), 0);
   }
 
   /**

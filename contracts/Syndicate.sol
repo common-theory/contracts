@@ -88,9 +88,7 @@ contract Syndicate {
     if (payment.time == 0) return payment.weiValue - payment.weiPaid;
 
     // Calculate owed wei based on current time and total wei owed/paid
-    uint256 weiPerSecond = payment.weiValue / payment.time;
-    uint256 owedSeconds = min(block.timestamp - payment.timestamp, payment.time);
-    return min(max(0, weiPerSecond * owedSeconds - payment.weiPaid), payment.weiValue - payment.weiPaid);
+    return max(0, payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time - payment.weiPaid);
   }
 
   /**

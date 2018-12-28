@@ -14,8 +14,6 @@ contract Syndicate {
 
   mapping (address => uint256) public balances;
 
-  bool public contractUpdated = false;
-
   struct Payment {
     address sender;
     address receiver;
@@ -55,8 +53,6 @@ contract Syndicate {
    * payment to the updated contract (if an update proposal has passed).
    **/
   function() external payable {
-    // revert the transaction, don't let ether be sent here if we've updated
-    if (contractUpdated) require(false);
     balances[msg.sender] += msg.value;
     deposit(msg.sender, 0);
   }

@@ -28,6 +28,29 @@ contract Syndicate {
   Payment[] public payments;
 
   /**
+   * Deposit to a given address over a certain amount of time.
+   *
+   * If the _time is 0 the value is deposited immediately.
+   *
+   * Otherwise a payment is created from msg.sender to _receiver.
+   **/
+  function deposit(address _receiver, uint256 _time) external payable {
+    if (_time == 0) {
+      balances[_receiver] += msg.value;
+      return;
+    }
+    balances[msg.sender] += msg.value;
+    pay(_receiver, msg.value, _time, msg.sender);
+  }
+
+  /**
+   * Deposit to a given address.
+   **/
+  function deposit(address _receiver) external payable {
+    deposit(_receiver, 0);
+  }
+
+  /**
    * Default payment function. Adds an unsettled payment entry, or forwards the
    * payment to the updated contract (if an update proposal has passed).
    **/
@@ -35,6 +58,7 @@ contract Syndicate {
     // revert the transaction, don't let ether be sent here if we've updated
     if (contractUpdated) require(false);
     balances[msg.sender] += msg.value;
+    deposit(msg.sender, 0);
   }
 
   /**

@@ -97,7 +97,7 @@ contract Syndicate {
   function isPaymentSettled(uint256 index) public view returns (bool) {
     // Ensure index is in range
     require(index >= 0);
-    require(index < paymentCount());
+    require(index < payments.length);
     Payment memory payment = payments[index];
     return payment.weiValue == payment.weiPaid;
   }

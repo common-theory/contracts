@@ -25,20 +25,22 @@ contract Decision {
     bool active;
   }
 
+  struct ProposedPayment {
+    address receiver;
+    uint256 weiValue;
+    uint256 time;
+  }
+
   /**
    * A proposal for members to vote on. Proposals can change contract state.
    **/
   struct Proposal {
-    /* Static values */
-    uint number;
-    uint voteCycle;
-    uint creationTimestamp;
+    uint256 timestamp;
     address creator;
 
     /* Input values */
     string description;
-    address receiver;
-    uint256 weiValue;
+    ProposedPayment[] proposedPayments;
 
     /* State info */
     uint totalAcceptingVotes;
@@ -83,29 +85,13 @@ contract Decision {
   address public newContract;
   address syndicate;
 
-  constructor(address _syndicate, address _member, uint _voteCycleLength) public {
+  constructor(address _syndicate) public {
     syndicate = _syndicate;
-    genesisBlockTimestamp = block.timestamp;
-    lastVoteCycleLengthUpdate = block.timestamp;
-    lastVoteCycleNumber = 0;
-    /**
-     * Proposals can be applied immediately when there are 0 members.
-     **/
-    bytes32[3] memory arguments;
-    arguments[0] = bytes32(_member);
-    arguments[1] = bytes32(1);
-    createProposal('The bootstrap proposal, creates the first address value binding.', address(this), 'updateMember(bytes32, bytes32, bytes32)', arguments);
-    if (_voteCycleLength != 0) {
-      bytes32[3] memory voteArguments;
-      voteArguments[0] = bytes32(_voteCycleLength);
-      createProposal('Adjust vote cycle time.', address(this), 'putVoteCycleLength(bytes32, bytes32, bytes32)', voteArguments);
-      applyProposal(1);
-    }
-    applyProposal(0);
   }
 
-  function () external {
-    require(false, 'Decision contracts cannot receive funds');
+  function () external payable {
+    Syndicate s = Syndicate(syndicate);
+    s.deposit.value(msg.value)(address(this));
   }
 
   /**

@@ -33,10 +33,6 @@ contract Syndicate {
    * Otherwise a payment is created from msg.sender to _receiver.
    **/
   function deposit(address _receiver, uint256 _time) external payable {
-    if (_time == 0) {
-      balances[_receiver] += msg.value;
-      return;
-    }
     balances[msg.sender] += msg.value;
     pay(_receiver, msg.value, _time, msg.sender);
   }

@@ -50,9 +50,8 @@ contract Syndicate {
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
   function pay(address _receiver, uint256 _weiValue, uint256 _time, address _sender) public {
-    uint256 balance = balances[_sender];
     // Verify that the balance is there
-    require(_weiValue <= balance);
+    require(_weiValue <= balances[_sender]);
     payments.push(Payment({
       sender: _sender,
       receiver: _receiver,

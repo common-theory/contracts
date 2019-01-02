@@ -19,6 +19,21 @@ contract('Syndicate', accounts => {
     assert.equal(weiValue.toString(), balance.toString());
   });
 
+  it('should instant deposit via fallback', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[1];
+    const weiValue = 100;
+    await web3.eth.sendTransaction({
+      from: owner,
+      to: _contract.address,
+      value: weiValue,
+      gas: 300000
+    });
+    const balance = await contract.methods.balances(owner).call();
+    assert.equal(weiValue.toString(), balance.toString());
+  });
+
   it('should deposit over time', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);

@@ -25,6 +25,8 @@ contract Syndicate {
 
   Payment[] public payments;
 
+  event PaymentUpdated(uint256 index);
+
   /**
    * Deposit to a given address over a certain amount of time.
    *
@@ -63,7 +65,9 @@ contract Syndicate {
     // Update the balance value of the sender to effectively lock the funds in place
     balances[_sender] -= _weiValue;
     // Attempt instant payment settlement
-    paymentSettle(paymentCount() - 1);
+    uint256 paymentIndex = payments.length - 1;
+    paymentSettle(paymentIndex);
+    emit PaymentUpdated(paymentIndex);
   }
 
   /**
@@ -82,6 +86,7 @@ contract Syndicate {
     uint256 owedWei = paymentWeiOwed(index);
     balances[payments[index].receiver] += owedWei;
     payments[index].weiPaid += owedWei;
+    emit PaymentUpdated(index);
   }
 
   /**

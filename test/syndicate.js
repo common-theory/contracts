@@ -198,9 +198,8 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = new BN('5000');
     const withdrawalWeiValue = new BN('500');
-    const time = 0;
     const toAddress = web3.eth.accounts.create().address;
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.deposit(toAddress, 0).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -224,11 +223,7 @@ contract('Syndicate', accounts => {
     const withdrawalWeiValue = weiValue.div(new BN(2));
     const time = 60;
     const toAddress = web3.eth.accounts.create().address;
-    await contract.methods.withdraw().send({
-      from: owner,
-      gas: 300000
-    });
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.deposit(toAddress, time).send({
       from: owner,
       value: weiValue,
       gas: 300000

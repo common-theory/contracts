@@ -109,7 +109,7 @@ contract Syndicate {
   }
 
   /**
-   * Withdraw balance from msg.sender to address.
+   * Withdraw to address balance from Syndicate to ether.
    **/
   function withdraw(uint256 weiValue, address payable to, uint256[] memory indexesToSettle) public {
     // Settle any supplied payment indexes

@@ -241,4 +241,32 @@ contract('Syndicate', accounts => {
     const toAddressWei = new BN(await web3.eth.getBalance(toAddress));
     assert.ok(toAddressWei.gte(withdrawalWeiValue));
   });
+
+  /**
+   * Tests isPaymentSettled(uint256 paymentIndex) function.
+   **/
+  it('isPaymentSettled should fail for out of range index', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    try {
+      await contract.methods.isPaymentSettled(-1).call();
+      throw new Error('Method should throw for negative value');
+    } catch (_) {}
+    try {
+      const paymentCount = await contract.methods.paymentCount();
+      await contract.methods.isPaymentSettled(paymentCount);
+      throw new Error('Method should throw for value longer than paymentCount');
+    } catch (_) {}
+
+    const owner = accounts[0];
+    await contract.methods.deposit(owner, 60).send({
+      from: owner,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 20));
+    assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
+    await new Promise(r => setTimeout(r, 40));
+    assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
+  });
 });

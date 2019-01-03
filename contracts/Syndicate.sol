@@ -153,13 +153,6 @@ contract Syndicate {
   }
 
   /**
-   * Return the larger of two values.
-   **/
-  function max(uint a, uint b) private pure returns (uint) {
-    return a > b ? a : b;
-  }
-
-  /**
    * Return the smaller of two values.
    **/
   function min(uint a, uint b) private pure returns (uint) {

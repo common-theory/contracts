@@ -13,6 +13,7 @@ contract Decision {
     uint256 _time;
     uint256 weiValue;
     mapping (address => bool) votes;
+    bool isExecuted;
     bool isMigration;
   }
 
@@ -28,21 +29,25 @@ contract Decision {
     members = _members;
   }
 
-  function proposePayment(address _receiver, uint256 _weiValue, uint256 _time) public {
+  function () external payable {}
+
+  function proposePayment(address payable _receiver, uint256 _weiValue, uint256 _time) public {
     proposals.push(Proposal({
       receiver: _receiver,
       weiValue: _weiValue,
       _time: _time,
-      isMigration: false
+      isMigration: false,
+      isExecuted: false
     }));
   }
 
-  function proposeMigration(address _receiver) public {
+  function proposeMigration(address payable _receiver) public {
     proposals.push(Proposal({
       receiver: _receiver,
       weiValue: 0,
       _time: 0,
-      isMigration: true
+      isMigration: true,
+      isExecuted: false
     }));
   }
 
@@ -66,12 +71,16 @@ contract Decision {
   function proposalExecute(uint256 index) public {
     require(isProposalPassed(index));
     Proposal memory proposal = proposals[index];
+    require(!proposal.isExecuted);
     if (proposal.isMigration == true) {
       selfdestruct(proposal.receiver);
       return;
     }
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.deposit.value(proposal.weiValue)(proposal.receiver, proposal._time);
+    proposals[index].isExecuted = true;
+    if (proposal._time != 0) return;
+    syndicate.withdraw(proposal.weiValue, proposal.receiver);
   }
 
   function proposalCount() public view returns (uint256) {

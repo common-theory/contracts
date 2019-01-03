@@ -71,13 +71,6 @@ contract Syndicate {
   }
 
   /**
-   * Overloaded pay function with msg.sender as default sender.
-   **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _time) public {
-    pay(_receiver, _weiValue, _time, msg.sender);
-  }
-
-  /**
    * Settle an individual payment at the current point in time.
    *
    * Can be called multiple times for payments over time.

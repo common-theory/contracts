@@ -5,7 +5,8 @@ const BN = require('bn.js');
 contract('Syndicate', accounts => {
 
   /**
-   * Tests deposit() with a zero _time argument.
+   * Tests deposit(address payable _receiver, uint256 _time) with a zero _time
+   * argument.
    *
    * - Send Ether to Syndicate via deposit()
    * - Verify same transaction payment settlement
@@ -27,7 +28,8 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests deposit() with non-zero _time argument.
+   * Tests deposit(address payable _receiver, uint256 _time) with non-zero _time
+   * argument.
    *
    * - Send Ether to Syndicate via deposit()
    * - Verify payment settlement every network block rate (or 1 second) until

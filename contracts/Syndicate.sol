@@ -116,10 +116,9 @@ contract Syndicate {
     // This allows for lazy balance updates at withdrawal time
     for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(i);
 
-    address from = msg.sender;
-    require(balances[from] >= weiValue);
+    require(balances[to] >= weiValue);
     to.transfer(weiValue);
-    balances[from] -= weiValue;
+    balances[to] -= weiValue;
   }
 
   /**

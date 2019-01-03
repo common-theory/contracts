@@ -19,22 +19,35 @@ contract Decision {
 
   struct Proposal {
     ProposedPayment[] paymentProposals;
-    uint256 votingMembers;
-    uint256 votes;
+    mapping (address => bool) votes;
   }
 
   Proposal[] proposals;
 
+  address[] members;
+
   address payable syndicateAddress;
 
-  constructor(address payable _syndicateAddress) public {
+  constructor(address payable _syndicateAddress, address[] memory _members) public {
     syndicateAddress = _syndicateAddress;
+    require(_members.length >= 1);
+    members = _members;
+  }
+
+  function proposalVote(uint256 index, bool vote) public {
+    require(index >= 0);
+    require(index < proposals.length);
+    proposals[index].votes[msg.sender] = vote;
   }
 
   function canExecuteProposal(uint256 index) public view returns (bool) {
     require(index >= 0);
     require(index < proposals.length);
-    Proposal memory proposal = proposals[index];
+    Proposal storage proposal = proposals[index];
+    for (uint256 i = 0; i < members.length; i++) {
+      if (proposal.votes[members[i]]) continue;
+      return false;
+    }
     uint256 totalWei = 0;
     for (uint256 i = 0; i < proposal.paymentProposals.length; i++) {
       totalWei += proposal.paymentProposals[i].weiValue;
@@ -42,7 +55,7 @@ contract Decision {
     return totalWei <= address(this).balance;
   }
 
-  function executeProposal(uint256 index) public {
+  function proposalExecute(uint256 index) public {
     require(canExecuteProposal(index));
     Proposal memory proposal = proposals[index];
     Syndicate syndicate = Syndicate(syndicateAddress);
@@ -55,4 +68,5 @@ contract Decision {
   function proposalCount() public view returns (uint256) {
     return proposals.length;
   }
+
 }

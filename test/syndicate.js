@@ -267,4 +267,15 @@ contract('Syndicate', accounts => {
     await new Promise(r => setTimeout(r, 40));
     assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
   });
+
+  it('should fail to make payment larger than balance', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const balance = await contract.methods.balances(owner).call();
+    try {
+      await contract.methods.pay(accounts[3], +balance + 1, 0, owner);
+      throw new Error('Pay function should fail for weiValue > balance');
+    } catch (_) {}
+  });
 });

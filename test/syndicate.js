@@ -2,6 +2,9 @@ const Syndicate = artifacts.require('Syndicate');
 const assert = require('assert');
 const BN = require('bn.js');
 
+/**
+ * Syndicate contract tests
+ **/
 contract('Syndicate', accounts => {
 
   /**

@@ -187,4 +187,28 @@ contract('Syndicate', accounts => {
     assert.ok(expectedWei.eq(newOwnerWei));
   });
 
+  /**
+   * Tests withdraw(uint256 weiValue, address payable to) function.
+   **/
+  it ('should withdraw balance with weiValue and to args', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = new BN('5000');
+    const withdrawalWeiValue = new BN('500');
+    const time = 0;
+    const toAddress = web3.eth.accounts.create().address;
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    await contract.methods.withdraw(withdrawalWeiValue.toString(), toAddress).send({
+      from: owner,
+      gas: 300000,
+    });
+    const toAddressWei = new BN(await web3.eth.getBalance(toAddress));
+    assert.ok(withdrawalWeiValue.eq(toAddressWei));
+  });
+
 });

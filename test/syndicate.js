@@ -138,8 +138,49 @@ contract('Syndicate', accounts => {
     const withdrawalGasUsed = new BN(receipt.cumulativeGasUsed);
     const withdrawalWeiCost = withdrawalGasUsed.mul(gasPrice);
 
-    const newOwnerWei = new BN(await web3.eth.getBalance(owner));
     const expectedWei = ownerWei.add(weiValue).sub(withdrawalWeiCost);
+
+    const newOwnerWei = new BN(await web3.eth.getBalance(owner));
+
+    // Verify the current owner address value against the value before the
+    // withdrawal - withdrawal cost + payment.weiValue
+    assert.ok(expectedWei.eq(newOwnerWei));
+  });
+
+  /**
+   * Tests withdraw(uint256 weiValue) function.
+   **/
+  it('should withdraw balance with weiValue arg', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = new BN('5000');
+    const withdrawalWeiValue = new BN('500');
+    const time = 0;
+    const gasPrice = new BN(web3.eth.gasPrice);
+    await contract.methods.withdraw().send({
+      from: owner
+    });
+
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+
+    const ownerWei = new BN(await web3.eth.getBalance(owner));
+    const receipt = await contract.methods.withdraw(withdrawalWeiValue.toString()).send({
+      from: owner,
+      gas: 300000,
+      gasPrice
+    });
+
+    const withdrawalGasUsed = new BN(receipt.cumulativeGasUsed);
+    const withdrawalWeiCost = withdrawalGasUsed.mul(gasPrice);
+
+    const expectedWei = ownerWei.add(withdrawalWeiValue).sub(withdrawalWeiCost);
+
+    const newOwnerWei = new BN(await web3.eth.getBalance(owner));
 
     // Verify the current owner address value against the value before the
     // withdrawal - withdrawal cost + payment.weiValue

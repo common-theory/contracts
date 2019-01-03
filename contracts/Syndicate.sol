@@ -114,7 +114,7 @@ contract Syndicate {
   function withdraw(uint256 weiValue, address payable to, uint256[] memory indexesToSettle) public {
     // Settle any supplied payment indexes
     // This allows for lazy balance updates at withdrawal time
-    for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(i);
+    for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(indexesToSettle[i]);
 
     require(balances[to] >= weiValue);
     to.transfer(weiValue);

@@ -39,10 +39,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/common-theory/voting-logic.git"
+    "url": "git+https://github.com/common-theory/contracts.git"
   },
   "bugs": {
-    "url": "https://github.com/common-theory/voting-logic/issues"
+    "url": "https://github.com/common-theory/contracts/issues"
   },
-  "homepage": "https://github.com/common-theory/voting-logic#readme"
+  "homepage": "https://github.com/common-theory/contracts#readme"
 }

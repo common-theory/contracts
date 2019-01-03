@@ -10,20 +10,6 @@ language: node_js
 node_js:
   10
 
-addons:
-  apt:
-    sources:
-      - sourceline: 'ppa:longsleep/golang-backports'
-    update: true
-    packages:
-      - golang-go
-
-before_script:
-  - go get -u github.com/ipfs/ipfs-update
-  - ipfs-update install v0.4.18
-
 script:
-  - ipfs init
-  - ipfs daemon &
   - npm run ganache &
   - npm run coverage

@@ -233,7 +233,8 @@ contract('Syndicate', accounts => {
       value: weiValue,
       gas: 300000
     });
-    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    const paymentCount = await contract.methods.paymentCount().call();
+    const paymentIndex = +paymentCount - 1;
     // Wait for half the payment time period
     await new Promise(r => setTimeout(r, 10 + time * 1000 / 2));
     await contract.methods.withdraw(withdrawalWeiValue.toString(), toAddress, [paymentIndex]).send({

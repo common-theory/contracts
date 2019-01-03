@@ -101,4 +101,47 @@ contract('Syndicate', accounts => {
     assert.equal(weiValue.toString(), balance.toString());
   });
 
+  /**
+   * Tests withdraw() function with no arguments.
+   *
+   * - Deposit using Syndicate.deposit()
+   * - Withdraw balance
+   * - Verify network Ether balance
+   **/
+  it('should withdraw balance with no args', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = new BN('500');
+    const time = 0;
+    const gasPrice = new BN(web3.eth.gasPrice);
+    await contract.methods.withdraw().send({
+      from: owner
+    });
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000,
+      gasPrice
+    });
+    const ownerWei = new BN(await web3.eth.getBalance(owner));
+    const receipt = await contract.methods.withdraw().send({
+      from: owner,
+      gas: 300000,
+      gasPrice
+    });
+    const balance = await contract.methods.balances(owner).call();
+    assert.equal(0, +balance);
+
+    const withdrawalGasUsed = new BN(receipt.cumulativeGasUsed);
+    const withdrawalWeiCost = withdrawalGasUsed.mul(gasPrice);
+
+    const newOwnerWei = new BN(await web3.eth.getBalance(owner));
+    const expectedWei = ownerWei.add(weiValue).sub(withdrawalWeiCost);
+
+    // Verify the current owner address value against the value before the
+    // withdrawal - withdrawal cost + payment.weiValue
+    assert.ok(expectedWei.eq(newOwnerWei));
+  });
+
 });

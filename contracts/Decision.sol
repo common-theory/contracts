@@ -4,22 +4,16 @@ import './Syndicate.sol';
 
 /**
  * A contract for multisignature Syndicate payment creation.
- *
- * Votes are successful only if 100% of voters agree, and at least 75% of voters
- * participate.
  **/
 
 contract Decision {
 
-  struct ProposedPayment {
+  struct Proposal {
     address payable receiver;
     uint256 _time;
     uint256 weiValue;
-  }
-
-  struct Proposal {
-    ProposedPayment[] paymentProposals;
     mapping (address => bool) votes;
+    bool isMigration;
   }
 
   Proposal[] proposals;
@@ -34,35 +28,50 @@ contract Decision {
     members = _members;
   }
 
+  function proposePayment(address _receiver, uint256 _weiValue, uint256 _time) public {
+    proposals.push(Proposal({
+      receiver: _receiver,
+      weiValue: _weiValue,
+      _time: _time,
+      isMigration: false
+    }));
+  }
+
+  function proposeMigration(address _receiver) public {
+    proposals.push(Proposal({
+      receiver: _receiver,
+      weiValue: 0,
+      _time: 0,
+      isMigration: true
+    }));
+  }
+
   function proposalVote(uint256 index, bool vote) public {
     require(index >= 0);
     require(index < proposals.length);
     proposals[index].votes[msg.sender] = vote;
   }
 
-  function canExecuteProposal(uint256 index) public view returns (bool) {
+  function isProposalPassed(uint256 index) public view returns (bool) {
     require(index >= 0);
     require(index < proposals.length);
     Proposal storage proposal = proposals[index];
     for (uint256 i = 0; i < members.length; i++) {
-      if (proposal.votes[members[i]]) continue;
+      if (proposal.votes[members[i]] == true) continue;
       return false;
     }
-    uint256 totalWei = 0;
-    for (uint256 i = 0; i < proposal.paymentProposals.length; i++) {
-      totalWei += proposal.paymentProposals[i].weiValue;
-    }
-    return totalWei <= address(this).balance;
+    return proposal.weiValue <= address(this).balance;
   }
 
   function proposalExecute(uint256 index) public {
-    require(canExecuteProposal(index));
+    require(isProposalPassed(index));
     Proposal memory proposal = proposals[index];
-    Syndicate syndicate = Syndicate(syndicateAddress);
-    for (uint256 i = 0; i < proposal.paymentProposals.length; i++) {
-      ProposedPayment memory payment = proposal.paymentProposals[i];
-      syndicate.deposit.value(payment.weiValue)(payment.receiver, payment._time);
+    if (proposal.isMigration == true) {
+      selfdestruct(proposal.receiver);
+      return;
     }
+    Syndicate syndicate = Syndicate(syndicateAddress);
+    syndicate.deposit.value(proposal.weiValue)(proposal.receiver, proposal._time);
   }
 
   function proposalCount() public view returns (uint256) {

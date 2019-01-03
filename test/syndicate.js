@@ -190,7 +190,7 @@ contract('Syndicate', accounts => {
   /**
    * Tests withdraw(uint256 weiValue, address payable to) function.
    **/
-  it ('should withdraw balance with weiValue and to args', async () => {
+  it('should withdraw balance with weiValue and to args', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
@@ -211,4 +211,34 @@ contract('Syndicate', accounts => {
     assert.ok(withdrawalWeiValue.eq(toAddressWei));
   });
 
+  /**
+   * Tests withdraw(uint256 weiValue, address payable to, uint256[] memory indexesToSettle) function.
+   **/
+  it('should withdraw balance and settle payment', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = new BN('5000');
+    const withdrawalWeiValue = weiValue.div(new BN(2));
+    const time = 60;
+    const toAddress = web3.eth.accounts.create().address;
+    await contract.methods.withdraw().send({
+      from: owner,
+      gas: 300000
+    });
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    // Wait for half the payment time period
+    await new Promise(r => setTimeout(r, time * 1000 / 2));
+    await contract.methods.withdraw(withdrawalWeiValue.toString(), toAddress, [paymentIndex]).send({
+      from: owner,
+      gas: 300000
+    });
+    const toAddressWei = new BN(await web3.eth.getBalance(toAddress));
+    assert.ok(toAddressWei.gte(withdrawalWeiValue));
+  });
 });

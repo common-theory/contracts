@@ -249,15 +249,15 @@ contract('Syndicate', accounts => {
   it('isPaymentSettled should fail for out of range index', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    try {
-      await contract.methods.isPaymentSettled(-1).call();
-      throw new Error('Method should throw for negative value');
-    } catch (_) {}
-    try {
-      const paymentCount = await contract.methods.paymentCount();
-      await contract.methods.isPaymentSettled(paymentCount);
-      throw new Error('Method should throw for value longer than paymentCount');
-    } catch (_) {}
+    await assert.rejects(
+      contract.methods.isPaymentSettled(-1).call(),
+      'Method should throw for negative value'
+    );
+    const paymentCount = await contract.methods.paymentCount().call();
+    await assert.rejects(
+      contract.methods.isPaymentSettled(+paymentCount).call(),
+      'Method should throw for value longer than paymentCount'
+    );
 
     const owner = accounts[0];
     await contract.methods.deposit(owner, 60).send({
@@ -276,9 +276,12 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const balance = await contract.methods.balances(owner).call();
-    try {
-      await contract.methods.pay(accounts[3], +balance + 1, 0, owner);
-      throw new Error('Pay function should fail for weiValue > balance');
-    } catch (_) {}
+    await assert.rejects(
+      contract.methods.pay(accounts[3], +balance + 1, 0, owner).send({
+        from: owner,
+        gas: 300000
+      }),
+      'Pay function should fail for weiValue > balance'
+    );
   });
 });

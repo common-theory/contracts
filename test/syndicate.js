@@ -38,8 +38,13 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = 2491;
-    // Do a check over a longer period of time in CI
     const time = process.env.CI ? 500 : 60;
+    // Flush the Syndicate balance from the owner address
+    await contract.methods.withdraw().send({
+      from: owner,
+      gas: 300000
+    });
+    // Deposit from owner address
     await contract.methods.deposit(owner, time).send({
       from: owner,
       value: weiValue,

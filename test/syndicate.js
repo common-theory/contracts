@@ -38,7 +38,9 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = 2491;
-    const time = process.env.CI ? 150 : 60;
+    const time = process.env.CI ? 150 : 30;
+    // Time past the payment completion time to test
+    const overrunTime = 30;
     // Flush the Syndicate balance from the owner address
     await contract.methods.withdraw().send({
       from: owner,
@@ -69,7 +71,7 @@ contract('Syndicate', accounts => {
       // the loop timestamp (which should always be >= block.timestamp)
       assert.ok(+_payment.weiPaid <= totalWeiOwed);
 
-      if (now > +payment.timestamp + +payment.time + 30) break;
+      if (now > +payment.timestamp + +payment.time + overrunTime) break;
     }
 
     const balance = await contract.methods.balances(owner).call();

@@ -9,7 +9,7 @@
     "deploy:dev": "npm run clean && truffle migrate --network development",
     "deploy:rinkeby": "npm run clean && truffle migrate --network rinkeby",
     "ganache": "ganache-cli -b 10 -p 7545",
-    "coverage": "solidity-coverage",
+    "coverage": "solidity-coverage && lcov-badge-generator ./coverage/lcov.info -o ./test/badge.svg",
     "precommit": "exit 0",
     "postinstall": "scripts/postinstall.sh",
     "test": "truffle test"

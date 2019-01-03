@@ -27,4 +27,3 @@ script:
   - ipfs daemon &
   - npm run ganache &
   - npm run coverage
-  - npm run upload-coverage

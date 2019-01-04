@@ -23,6 +23,8 @@ contract Decision {
 
   address payable syndicateAddress;
 
+  event ProposalUpdated(uint256 index);
+
   constructor(address payable _syndicateAddress, address[] memory _members) public {
     syndicateAddress = _syndicateAddress;
     require(_members.length >= 1);
@@ -39,6 +41,7 @@ contract Decision {
       isMigration: false,
       isExecuted: false
     }));
+    emit ProposalUpdated(proposals.length - 1);
   }
 
   function proposeMigration(address payable _receiver) public {
@@ -49,12 +52,14 @@ contract Decision {
       isMigration: true,
       isExecuted: false
     }));
+    emit ProposalUpdated(proposals.length - 1);
   }
 
   function proposalVote(uint256 index, bool vote) public {
     require(index >= 0);
     require(index < proposals.length);
     proposals[index].votes[msg.sender] = vote;
+    emit ProposalUpdated(index);
   }
 
   function isProposalPassed(uint256 index) public view returns (bool) {
@@ -79,6 +84,7 @@ contract Decision {
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.deposit.value(proposal.weiValue)(proposal.receiver, proposal._time);
     proposals[index].isExecuted = true;
+    emit ProposalUpdated(index);
     if (proposal._time != 0) return;
     syndicate.withdraw(proposal.weiValue, proposal.receiver);
   }

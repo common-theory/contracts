@@ -76,7 +76,6 @@ contract Syndicate {
    * Can be called multiple times for payments over time.
    **/
   function paymentSettle(uint256 index) public {
-    assertPaymentIndexInRange(index);
     uint256 owedWei = paymentWeiOwed(index);
     balances[payments[index].receiver] += owedWei;
     payments[index].weiPaid += owedWei;

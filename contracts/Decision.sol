@@ -56,15 +56,13 @@ contract Decision {
   }
 
   function proposalVote(uint256 index, bool vote) public {
-    require(index >= 0);
-    require(index < proposals.length);
+    assertProposalIndexInRange(index);
     proposals[index].votes[msg.sender] = vote;
     emit ProposalUpdated(index);
   }
 
   function isProposalPassed(uint256 index) public view returns (bool) {
-    require(index >= 0);
-    require(index < proposals.length);
+    assertProposalIndexInRange(index);
     Proposal storage proposal = proposals[index];
     for (uint256 i = 0; i < members.length; i++) {
       if (proposal.votes[members[i]] == true) continue;
@@ -87,6 +85,14 @@ contract Decision {
     emit ProposalUpdated(index);
     if (proposal._time != 0) return;
     syndicate.withdraw(proposal.weiValue, proposal.receiver);
+  }
+
+  /**
+   * Reverts if the supplied proposal index is out of range
+   **/
+  function assertProposalIndexInRange(uint256 index) public view {
+    require(index >= 0);
+    require(index < proposals.length);
   }
 
   function proposalCount() public view returns (uint256) {

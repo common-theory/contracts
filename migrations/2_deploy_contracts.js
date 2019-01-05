@@ -1,5 +1,4 @@
 const Syndicate = artifacts.require('Syndicate');
-const Decision = artifacts.require('Decision');
 
 /**
  * async/await and Promise.* functions do not work for the promises below
@@ -7,11 +6,9 @@ const Decision = artifacts.require('Decision');
  **/
 module.exports = function(deployer, _, accounts) {
   deployer.deploy(Syndicate)
-    .then(() => deployer.deploy(Decision, Syndicate.address, [accounts[0]]))
     .then(() => console.log(`
 Deployed the following:
 
 syndicate contract: ${Syndicate.address}
-decision contract: ${Decision.address}
 `));
 };

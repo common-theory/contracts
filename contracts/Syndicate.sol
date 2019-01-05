@@ -112,32 +112,32 @@ contract Syndicate {
   }
 
   /**
-   * Withdraw to address balance from Syndicate to ether.
+   * Withdraw target address balance from Syndicate to ether.
    **/
-  function withdraw(address payable to, uint256 weiValue, uint256[] memory indexesToSettle) public {
+  function withdraw(address payable target, uint256 weiValue, uint256[] memory indexesToSettle) public {
     // Settle any supplied payment indexes
     // This allows for lazy balance updates at withdrawal time
     for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(indexesToSettle[i]);
 
-    require(balances[to] >= weiValue);
-    to.transfer(weiValue);
-    balances[to] -= weiValue;
+    require(balances[target] >= weiValue);
+    target.transfer(weiValue);
+    balances[target] -= weiValue;
   }
 
   /**
-   * Two arguments, to address and weiValue.
+   * Two arguments, target address and weiValue.
    **/
-  function withdraw(address payable to, uint256 weiValue) public {
+  function withdraw(address payable target, uint256 weiValue) public {
     uint256[] memory indexesToSettle;
-    withdraw(to, weiValue, indexesToSettle);
+    withdraw(target, weiValue, indexesToSettle);
   }
 
   /**
-   * One argument, to address.
+   * One argument, target address.
    **/
-  function withdraw(address payable to) public {
+  function withdraw(address payable target) public {
     uint256[] memory indexesToSettle;
-    withdraw(to, balances[to], indexesToSettle);
+    withdraw(target, balances[target], indexesToSettle);
   }
 
   /**

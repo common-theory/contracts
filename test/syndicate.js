@@ -153,49 +153,39 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests withdraw(uint256 weiValue) function.
+   * Tests withdraw(address to) function.
    **/
-  it('should withdraw balance with weiValue arg', async () => {
+  it('should withdraw balance with to address arg', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = new BN('5000');
-    const withdrawalWeiValue = new BN('500');
     const time = 0;
-    const gasPrice = new BN(web3.eth.gasPrice);
     await contract.methods.withdraw().send({
       from: owner
     });
-
     await contract.methods.deposit(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
     });
-
     const ownerWei = new BN(await web3.eth.getBalance(owner));
-    const receipt = await contract.methods.withdraw(withdrawalWeiValue.toString()).send({
-      from: owner,
-      gas: 300000,
-      gasPrice
+    const receipt = await contract.methods.withdraw(owner).send({
+      from: accounts[4],
+      gas: 300000
     });
 
-    const withdrawalGasUsed = new BN(receipt.cumulativeGasUsed);
-    const withdrawalWeiCost = withdrawalGasUsed.mul(gasPrice);
-
-    const expectedWei = ownerWei.add(withdrawalWeiValue).sub(withdrawalWeiCost);
-
+    const expectedWei = ownerWei.add(weiValue);
     const newOwnerWei = new BN(await web3.eth.getBalance(owner));
-
     // Verify the current owner address value against the value before the
     // withdrawal - withdrawal cost + payment.weiValue
     assert.ok(expectedWei.eq(newOwnerWei));
   });
 
   /**
-   * Tests withdraw(uint256 weiValue, address payable to) function.
+   * Tests withdraw(address payable to, uint256 weiValue) function.
    **/
-  it('should withdraw balance with weiValue and to args', async () => {
+  it('should withdraw balance with to address and weiValue args', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
@@ -207,7 +197,7 @@ contract('Syndicate', accounts => {
       value: weiValue,
       gas: 300000
     });
-    await contract.methods.withdraw(withdrawalWeiValue.toString(), toAddress).send({
+    await contract.methods.withdraw(toAddress, withdrawalWeiValue.toString()).send({
       from: owner,
       gas: 300000,
     });
@@ -216,7 +206,7 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests withdraw(uint256 weiValue, address payable to, uint256[] memory indexesToSettle) function.
+   * Tests withdraw(address payable to, uint256 weiValue, uint256[] memory indexesToSettle) function.
    **/
   it('should withdraw balance and settle payment', async () => {
     const _contract = await Syndicate.deployed();
@@ -235,7 +225,7 @@ contract('Syndicate', accounts => {
     const paymentIndex = +paymentCount - 1;
     // Wait for half the payment time period
     await new Promise(r => setTimeout(r, 10 + time * 1000 / 2));
-    await contract.methods.withdraw(withdrawalWeiValue.toString(), toAddress, [paymentIndex]).send({
+    await contract.methods.withdraw(toAddress, withdrawalWeiValue.toString(), [paymentIndex]).send({
       from: owner,
       gas: 300000
     });

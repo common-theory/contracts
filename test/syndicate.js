@@ -279,18 +279,33 @@ contract('Syndicate', accounts => {
       contract.methods.assertPaymentIndexInRange(+paymentCount).call(),
       'Method should throw for value longer than paymentCount'
     );
+  });
 
+  /**
+   * Run a payment over time and test isPaymentSettled over time.
+   **/
+  it('isPaymentSettled should evaluate correctly', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
-    await contract.methods.deposit(owner, 60).send({
+    await contract.methods.withdraw().send({
+      from: owner
+    });
+    const time = 60;
+    await contract.methods.deposit(owner, time).send({
       from: owner,
       value: 100,
       gas: 300000
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    await new Promise(r => setTimeout(r, 20));
     assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
-    await new Promise(r => setTimeout(r, 40));
+    await new Promise(r => setTimeout(r, time * 1000 / 4));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner,
+      gas: 300000
+    });
     assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
+    await new Promise(r => setTimeout(r, time * 1000));
     await contract.methods.paymentSettle(paymentIndex).send({
       from: owner,
       gas: 300000
@@ -298,6 +313,9 @@ contract('Syndicate', accounts => {
     assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
   });
 
+  /**
+   * Payment should fail for value larger than balance
+   **/
   it('should fail to make payment larger than balance', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);

@@ -16,7 +16,7 @@ contract Syndicate {
 
   struct Payment {
     address sender;
-    address receiver;
+    address payable receiver;
     uint256 timestamp;
     uint256 time;
     uint256 weiValue;
@@ -42,7 +42,7 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _time) public {
+  function pay(address payable _receiver, uint256 _weiValue, uint256 _time) public {
     // Verify that the balance is there and value is non-zero
     require(_weiValue <= balances[msg.sender] && _weiValue > 0);
     payments.push(Payment({
@@ -65,10 +65,14 @@ contract Syndicate {
    * Can be called idempotently.
    **/
   function paymentSettle(uint256 index) public {
+    bool wasPaymentSettled = isPaymentSettled(index);
     uint256 owedWei = paymentWeiOwed(index);
     balances[payments[index].receiver] += owedWei;
     payments[index].weiPaid += owedWei;
     emit PaymentUpdated(index);
+    if (!wasPaymentSettled && isPaymentSettled(index)) {
+      withdraw(payments[index].receiver);
+    }
   }
 
   /**
@@ -103,38 +107,24 @@ contract Syndicate {
   /**
    * Withdraw target address balance from Syndicate to ether.
    **/
-  function withdraw(address payable target, uint256 weiValue, uint256[] memory indexesToSettle) public {
-    // Settle any supplied payment indexes
-    // This allows for lazy balance updates at withdrawal time
-    for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(indexesToSettle[i]);
-
+  function withdraw(address payable target, uint256 weiValue) public {
     require(balances[target] >= weiValue);
     balances[target] -= weiValue;
     target.transfer(weiValue);
   }
 
   /**
-   * Two arguments, target address and weiValue.
-   **/
-  function withdraw(address payable target, uint256 weiValue) public {
-    uint256[] memory indexesToSettle;
-    withdraw(target, weiValue, indexesToSettle);
-  }
-
-  /**
    * One argument, target address.
    **/
   function withdraw(address payable target) public {
-    uint256[] memory indexesToSettle;
-    withdraw(target, balances[target], indexesToSettle);
+    withdraw(target, balances[target]);
   }
 
   /**
    * No arguments, withdraws full balance to sender from sender balance.
    **/
   function withdraw() public {
-    uint256[] memory indexesToSettle;
-    withdraw(msg.sender, balances[msg.sender], indexesToSettle);
+    withdraw(msg.sender, balances[msg.sender]);
   }
 
   /**

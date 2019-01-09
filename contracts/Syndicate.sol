@@ -26,13 +26,10 @@ contract Syndicate {
   Payment[] public payments;
 
   event PaymentUpdated(uint256 index);
+  event PaymentCreated(uint256 index);
 
   /**
    * Deposit to a given address over a certain amount of time.
-   *
-   * If the _time is 0 the value is deposited immediately.
-   *
-   * Otherwise a payment is created from msg.sender to _receiver.
    **/
   function deposit(address payable _receiver, uint256 _time) external payable {
     balances[msg.sender] += msg.value;
@@ -45,6 +42,8 @@ contract Syndicate {
   function pay(address payable _receiver, uint256 _weiValue, uint256 _time) public {
     // Verify that the balance is there and value is non-zero
     require(_weiValue <= balances[msg.sender] && _weiValue > 0);
+    // Verify the time is non-zero
+    require(_time > 0);
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -55,8 +54,7 @@ contract Syndicate {
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
-    // Attempt instant payment settlement
-    paymentSettle(payments.length - 1);
+    emit PaymentCreated(payments.length - 1);
   }
 
   /**
@@ -65,14 +63,10 @@ contract Syndicate {
    * Can be called idempotently.
    **/
   function paymentSettle(uint256 index) public {
-    bool wasPaymentSettled = isPaymentSettled(index);
     uint256 owedWei = paymentWeiOwed(index);
     balances[payments[index].receiver] += owedWei;
     payments[index].weiPaid += owedWei;
     emit PaymentUpdated(index);
-    if (!wasPaymentSettled && isPaymentSettled(index)) {
-      withdraw(payments[index].receiver);
-    }
   }
 
   /**
@@ -81,8 +75,6 @@ contract Syndicate {
   function paymentWeiOwed(uint256 index) public view returns (uint256) {
     assertPaymentIndexInRange(index);
     Payment memory payment = payments[index];
-    // If the payment time is 0 just return the amount owed
-    if (payment.time == 0) return payment.weiValue - payment.weiPaid;
     // Calculate owed wei based on current time and total wei owed/paid
     return payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time - payment.weiPaid;
   }

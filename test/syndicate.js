@@ -14,20 +14,18 @@ contract('Syndicate', accounts => {
    * - Send Ether to Syndicate via deposit()
    * - Verify same transaction payment settlement
    **/
-  it('should instant deposit', async () => {
+  it('should fail to deposit instantly', async () => {
     const _contract = await Syndicate.deployed();
     // Get a reference to a normal web3.eth.Contract, not a TruffleContract
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = 100;
     const time = 0;
-    await contract.methods.deposit(owner, time).send({
+    await assert.rejects(contract.methods.deposit(owner, 0).send({
       from: owner,
       value: weiValue,
       gas: 300000
-    });
-    const balance = await contract.methods.balances(owner).call();
-    assert.equal(weiValue.toString(), balance.toString());
+    }));
   });
 
   /**
@@ -119,7 +117,7 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = 100;
-    const time = 0;
+    const time = 1;
     // Flush the Syndicate balance from the owner address
     await contract.methods.withdraw().send({
       from: owner,
@@ -130,6 +128,7 @@ contract('Syndicate', accounts => {
       value: weiValue,
       gas: 300000
     });
+    await new Promise(r => setTimeout(r, 2000))
     await assert.rejects(contract.methods.pay(accounts[1], 0, 0).send({
       from: owner,
       gas: 300000
@@ -148,7 +147,7 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = new BN('500');
-    const time = 0;
+    const time = 1;
     const gasPrice = new BN(web3.eth.gasPrice);
     await contract.methods.withdraw().send({
       from: owner
@@ -158,6 +157,11 @@ contract('Syndicate', accounts => {
       value: weiValue,
       gas: 300000,
       gasPrice
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 2000));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
     });
     const ownerWei = new BN(await web3.eth.getBalance(owner));
     const receipt = await contract.methods.withdraw().send({
@@ -188,7 +192,7 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = new BN('5000');
-    const time = 0;
+    const time = 1;
     await contract.methods.withdraw().send({
       from: owner
     });
@@ -196,6 +200,11 @@ contract('Syndicate', accounts => {
       from: owner,
       value: weiValue,
       gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 2000));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
     });
     const ownerWei = new BN(await web3.eth.getBalance(owner));
     const receipt = await contract.methods.withdraw(owner).send({
@@ -220,10 +229,16 @@ contract('Syndicate', accounts => {
     const weiValue = new BN('5000');
     const withdrawalWeiValue = new BN('500');
     const targetAddress = web3.eth.accounts.create().address;
-    await contract.methods.deposit(targetAddress, 0).send({
+    const time = 1;
+    await contract.methods.deposit(targetAddress, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 2000));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
     });
     await contract.methods.withdraw(targetAddress, withdrawalWeiValue.toString()).send({
       from: owner,
@@ -231,34 +246,6 @@ contract('Syndicate', accounts => {
     });
     const targetAddressWei = new BN(await web3.eth.getBalance(targetAddress));
     assert.ok(withdrawalWeiValue.eq(targetAddressWei));
-  });
-
-  /**
-   * Tests withdraw(address target, uint256 weiValue, uint256[] memory indexesToSettle) function.
-   **/
-  it('should withdraw balance and settle payment', async () => {
-    const _contract = await Syndicate.deployed();
-    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const owner = accounts[0];
-    const weiValue = new BN('5000');
-    const withdrawalWeiValue = weiValue.div(new BN(2));
-    const time = 60;
-    const targetAddress = web3.eth.accounts.create().address;
-    await contract.methods.deposit(targetAddress, time).send({
-      from: owner,
-      value: weiValue,
-      gas: 300000
-    });
-    const paymentCount = await contract.methods.paymentCount().call();
-    const paymentIndex = +paymentCount - 1;
-    // Wait for half the payment time period
-    await new Promise(r => setTimeout(r, 10 + time * 1000 / 2));
-    await contract.methods.withdraw(targetAddress, withdrawalWeiValue.toString(), [paymentIndex]).send({
-      from: owner,
-      gas: 300000
-    });
-    const targetAddressWei = new BN(await web3.eth.getBalance(targetAddress));
-    assert.ok(targetAddressWei.gte(withdrawalWeiValue));
   });
 
   /**

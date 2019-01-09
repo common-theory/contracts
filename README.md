@@ -2,45 +2,25 @@
 
 The common-theory contracts, with an overview of use.
 
-_Alpha development in progress in [`#10`](https://github.com/common-theory/contracts/pull/10)_
-
 ## Syndicate
 
 ```
 Syndicate
 
-noun - a group of individuals or syndicates combined to promote some common interest
+noun - a group of individuals combined to promote some common interest
 ```
 
-Syndicates can send and receive [ether](https://coinmarketcap.com/currencies/ethereum/) two ways:
-  - lump sum - sends a one time payment to a syndicate or individual (e.g. 1 ether to address `0x...`)
-  - per second - sends a fixed amount over a period of time (e.g. 5 ether over 30 days to address `0x...`)
-
-Syndicates do not allow debt by default. All transactions are guaranteed to complete; funds are locked once committed.
+Syndicates can be used to send payments over time between Ethereum addresses. Balances are held in the contract and funds are locked during transfer.
 
 Syndicates are a means by which to improve **fairness** and **efficiency** in financial interaction.
-
-## Decision
-
-Syndicates are operated by decision contracts. Decision contracts allow members to create and vote on proposals to execute functions in themselves and other contracts (in this case a Syndicate).
-
-Decision contracts have members, the creator being the first member. Decisions can only be made unanimously and must have at least 75% voter participation. Members cannot vote against changes to their own membership; a member cannot be voted out against their will until at least 4 people are present (75% voter participation).
-
-The current [`common-dapp`](https://github.com/common-theory/common-dapp) has _basic_ voting and membership (mirrors):
 
 - [`https://commontheory.io`](https://commontheory.io)
 - [`https://ipfs.io/ipns/commontheory.io`](https://ipfs.io/ipns/commontheory.io)
 - [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://dnslink-cid-badge.commontheory.io/commontheory.io?redirect=true)
 
-Decision contracts are a means by which to improve **transparency** and force humans to **communicate**.
-
 ## Intended Use
 
-Syndicates can be deployed to form alliances between groups of humans. Syndicates should embody the opposite of the connotation and promote productivity and wellness (physically and mentally) in the beings involved.
-
-[`Ethereum`](https://everipedia.org/wiki/lang_en/Ethereum/) can be used as the mechanism for consensus in governing policy. Open source web applications can be the controller.
-
-Decisions should not be a full time job. It should be no different than checking email.
+Syndicates can be used to coordinate funds between humans. Syndicates should embody the opposite of the connotation and promote productivity and wellness (physically and mentally) in the beings involved.
 
 Humans should exist peacefully. In the case that they don't it is the fault of the governing system, or the absence of one.
 

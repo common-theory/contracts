@@ -1,5 +1,14 @@
-const CommonDAC = artifacts.require('CommonDAC');
+const Syndicate = artifacts.require('Syndicate');
 
-module.exports = function(deployer) {
-  deployer.deploy(CommonDAC, '0xAb027372B1c52e1615EDdeF59C3Ca4412bf63b9f', 30);
+/**
+ * async/await and Promise.* functions do not work for the promises below
+ * https://github.com/trufflesuite/truffle/issues/501#issuecomment-332589663
+ **/
+module.exports = function(deployer, _, accounts) {
+  deployer.deploy(Syndicate)
+    .then(() => console.log(`
+Deployed the following:
+
+syndicate contract: ${Syndicate.address}
+`));
 };

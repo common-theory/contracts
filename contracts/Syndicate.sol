@@ -92,7 +92,6 @@ contract Syndicate {
    * Reverts if the supplied payment index is out of range
    **/
   function assertPaymentIndexInRange(uint256 index) public view {
-    require(index >= 0);
     require(index < payments.length);
   }
 

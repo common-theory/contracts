@@ -93,7 +93,7 @@ contract('Syndicate', accounts => {
    * - Send Ether to Syndicate contract
    * - Verify same transaction payment settlement
    **/
-  it('should instant deposit via fallback', async () => {
+  it('fallback should fail', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[1];
@@ -103,14 +103,11 @@ contract('Syndicate', accounts => {
       from: owner,
       gas: 300000
     });
-    await web3.eth.sendTransaction({
+    await assert.rejects(web3.eth.sendTransaction({
       from: owner,
       to: _contract.address,
-      value: weiValue,
-      gas: 300000
-    });
-    const balance = await contract.methods.balances(owner).call();
-    assert.equal(weiValue.toString(), balance.toString());
+      value: weiValue
+    }));
   });
 
   /**

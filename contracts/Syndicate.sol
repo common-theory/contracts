@@ -40,13 +40,6 @@ contract Syndicate {
   }
 
   /**
-   * Deposits money into address balance.
-   **/
-  function() external payable {
-    balances[msg.sender] += msg.value;
-  }
-
-  /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
   function pay(address _receiver, uint256 _weiValue, uint256 _time) public {

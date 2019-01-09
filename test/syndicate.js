@@ -313,4 +313,28 @@ contract('Syndicate', accounts => {
       'Pay function should fail for weiValue > balance'
     );
   });
+
+  it('should fail to withdraw more than available', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = new BN('5000');
+    const withdrawalWeiValue = new BN('50000');
+    const targetAddress = web3.eth.accounts.create().address;
+    const time = 1;
+    await contract.methods.deposit(targetAddress, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 2000));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
+    });
+    await assert.rejects(contract.methods.withdraw(targetAddress, withdrawalWeiValue.toString()).send({
+      from: owner,
+      gas: 300000,
+    }));
+  });
 });

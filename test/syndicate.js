@@ -98,6 +98,11 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[1];
     const weiValue = 100;
+    // Flush the Syndicate balance from the owner address
+    await contract.methods.withdraw().send({
+      from: owner,
+      gas: 300000
+    });
     await web3.eth.sendTransaction({
       from: owner,
       to: _contract.address,
@@ -106,6 +111,32 @@ contract('Syndicate', accounts => {
     });
     const balance = await contract.methods.balances(owner).call();
     assert.equal(weiValue.toString(), balance.toString());
+  });
+
+  /**
+   * Ensures that 0 value payments fail.
+   **/
+  it('should fail to pay with no value', async () => {
+    const _contract = await Syndicate.deployed();
+    // Get a reference to a normal web3.eth.Contract, not a TruffleContract
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 100;
+    const time = 0;
+    // Flush the Syndicate balance from the owner address
+    await contract.methods.withdraw().send({
+      from: owner,
+      gas: 300000
+    });
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    await assert.rejects(contract.methods.pay(accounts[1], 0, 0).send({
+      from: owner,
+      gas: 300000
+    }), '0 value payment should fail');
   });
 
   /**
@@ -252,12 +283,18 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     await contract.methods.deposit(owner, 60).send({
       from: owner,
+      value: 100,
       gas: 300000
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await new Promise(r => setTimeout(r, 20));
-    assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
+    assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
     await new Promise(r => setTimeout(r, 40));
+    assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner,
+      gas: 300000
+    });
     assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
   });
 
@@ -267,7 +304,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const balance = await contract.methods.balances(owner).call();
     await assert.rejects(
-      contract.methods.pay(accounts[3], +balance + 1, 0, owner).send({
+      contract.methods.pay(accounts[3], +balance + 1, 0).send({
         from: owner,
         gas: 300000
       }),

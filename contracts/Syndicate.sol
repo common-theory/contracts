@@ -36,26 +36,24 @@ contract Syndicate {
    **/
   function deposit(address payable _receiver, uint256 _time) external payable {
     balances[msg.sender] += msg.value;
-    pay(_receiver, msg.value, _time, msg.sender);
+    pay(_receiver, msg.value, _time);
   }
 
   /**
-   * Default payment function. Adds an unsettled payment entry, or forwards the
-   * payment to the updated contract (if an update proposal has passed).
+   * Deposits money into address balance.
    **/
   function() external payable {
     balances[msg.sender] += msg.value;
-    this.deposit(msg.sender, uint256(0));
   }
 
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address _receiver, uint256 _weiValue, uint256 _time, address _sender) public {
-    // Verify that the balance is there
-    require(_weiValue <= balances[_sender]);
+  function pay(address _receiver, uint256 _weiValue, uint256 _time) public {
+    // Verify that the balance is there and value is non-zero
+    require(_weiValue <= balances[msg.sender] && _weiValue > 0);
     payments.push(Payment({
-      sender: _sender,
+      sender: msg.sender,
       receiver: _receiver,
       timestamp: block.timestamp,
       time: _time,
@@ -63,17 +61,15 @@ contract Syndicate {
       weiPaid: 0
     }));
     // Update the balance value of the sender to effectively lock the funds in place
-    balances[_sender] -= _weiValue;
+    balances[msg.sender] -= _weiValue;
     // Attempt instant payment settlement
-    uint256 paymentIndex = payments.length - 1;
-    paymentSettle(paymentIndex);
-    emit PaymentUpdated(paymentIndex);
+    paymentSettle(payments.length - 1);
   }
 
   /**
    * Settle an individual payment at the current point in time.
    *
-   * Can be called multiple times for payments over time.
+   * Can be called idempotently.
    **/
   function paymentSettle(uint256 index) public {
     uint256 owedWei = paymentWeiOwed(index);

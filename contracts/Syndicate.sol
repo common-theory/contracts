@@ -116,8 +116,8 @@ contract Syndicate {
     for (uint256 i = 0; i < indexesToSettle.length; i++) paymentSettle(indexesToSettle[i]);
 
     require(balances[target] >= weiValue);
-    target.transfer(weiValue);
     balances[target] -= weiValue;
+    target.transfer(weiValue);
   }
 
   /**

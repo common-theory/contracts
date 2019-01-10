@@ -10,7 +10,7 @@ Syndicate
 noun - a group of individuals combined to promote some common interest
 ```
 
-Syndicates can be used to send payments over time between Ethereum addresses. Balances are held in the contract and funds are locked during transfer.
+Syndicates can be used to send payments over time between Ethereum addresses. Balances are held in the contract and funds are locked during transfer. Payments are guaranteed to complete once initiated.
 
 Syndicates are a means by which to improve **fairness** and **efficiency** in financial interaction.
 
@@ -18,11 +18,13 @@ Syndicates are a means by which to improve **fairness** and **efficiency** in fi
 - [`https://ipfs.io/ipns/commontheory.io`](https://ipfs.io/ipns/commontheory.io)
 - [![latest hash](https://dnslink-cid-badge.commontheory.io/commontheory.io)](https://dnslink-cid-badge.commontheory.io/commontheory.io?redirect=true)
 
+### Proof
+
+A mathematical proof of the [`paymentWeiOwed`](https://github.com/common-theory/contracts/blob/master/contracts/Syndicate.sol#L79) function can be found [here](https://github.com/common-theory/contracts/blob/master/proofs/paymentWeiOwed.pdf).
+
 ## Intended Use
 
 Syndicates can be used to coordinate funds between humans. Syndicates should embody the opposite of the connotation and promote productivity and wellness (physically and mentally) in the beings involved.
-
-Humans should exist peacefully. In the case that they don't it is the fault of the governing system, or the absence of one.
 
 ## Interest
 

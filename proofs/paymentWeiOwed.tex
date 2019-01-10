@@ -1,0 +1,122 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+
+\newtheorem{case}{Case}
+
+\pagenumbering{gobble}
+\begin{document}
+
+\[
+
+    P_\omega: payment.weiValue
+
+    P_\iota: payment.time
+
+    P_\tau: payment.timestamp
+
+    P_\rho: payment.weiPaid
+
+    \tau_b: block.timestamp
+\]
+\[
+    paymentWeiOwed = \frac{P_\omega}{P_\iota}min(\tau_b-P_\tau, P_\iota)-P_\rho
+\]
+
+For a payment of 500 wei over 100 seconds created at block timestamp 50 the following is true:
+
+\[
+
+P_\omega = 500
+
+P_\iota = 100
+
+P_\tau = 50
+
+P_\rho = 0
+
+\]
+
+\begin{case}
+
+Assuming the current block timestamp is 50 (the time of payment creation), the following is true
+
+\end{case}
+
+\begin{align*}
+    paymentWeiOwed = \frac{500}{100}min(50 - 50, 100)-0 \\
+                   = 5min(0, 100) - 0 \\
+                   = 5 * 0 - 0 \\
+                   = 0
+\end{align*}
+
+\begin{case}
+
+Assuming the current block timestamp is 75 (25\% into payment), the following is true
+
+\end{case}
+
+\begin{align*}
+    paymentWeiOwed = \frac{500}{100}min(75 - 50, 100) - 0 \\
+                   = 5min(25, 100) - 0 \\
+                   = 5 * 25 - 0 \\
+                   = 125
+\end{align*}
+
+Assume the user has settled at block timestamp 75. 125 wei is transferred to the recipient balance and the following becomes true:
+
+\[
+P_\rho = 125
+\]
+
+\begin{case}
+
+Assuming the current block timestamp is 100 (50\% into payment), the following is true
+
+\end{case}
+
+\begin{align*}
+    paymentWeiOwed = \frac{500}{100}min(100 - 50, 100) - 125 \\
+                   = 5min(50, 100) - 125 \\
+                   = 5 * 50 - 125 \\
+                   = 250 - 125 \\
+                   = 125
+\end{align*}
+
+\begin{case}
+
+Assuming the current block timestamp is 200 (150\% into payment), the following is true
+
+\end{case}
+
+\begin{align*}
+    paymentWeiOwed = \frac{500}{100}min(200 - 50, 100) - 125 \\
+                   = 5min(150, 100) - 125 \\
+                   = 5 * 100 - 125 \\
+                   = 500 - 125 \\
+                   = 375
+\end{align*}
+
+
+Assume the user has settled at block timestamp 200. 375 wei is transferred to the recipient balance and the following becomes true:
+
+\[
+P_\rho = 500
+\]
+
+\begin{case}
+
+Assuming the current block timestamp is 250 (200\% into payment), the following is true
+
+\end{case}
+
+\begin{align*}
+    paymentWeiOwed = \frac{500}{100}min(250 - 50, 100) - 500 \\
+                   = 5min(200, 100) - 500 \\
+                   = 5 * 100 - 500 \\
+                   = 500 - 500 \\
+                   = 0
+\end{align*}
+
+paymentWeiOwed evaluates to 0 as the block timestamp approaches inifinity; the payment is completed
+
+\end{document}

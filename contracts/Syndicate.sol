@@ -24,7 +24,7 @@ contract Syndicate {
   Payment[] public payments;
 
   // A mapping of Payment index to forked payments that have been created
-  mapping (uint256 => uint256[]) public _forks;
+  mapping (uint256 => uint256[2]) public _forks;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -79,7 +79,7 @@ contract Syndicate {
     assertPaymentIndexInRange(index);
     Payment memory payment = payments[index];
     // Calculate owed wei based on current time and total wei owed/paid
-    return payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time - payment.weiPaid;
+    return max(payment.weiPaid, payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time) - payment.weiPaid;
   }
 
   /**
@@ -102,7 +102,7 @@ contract Syndicate {
     require(msg.sender == payment.receiver);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
-    uint256 remainingTime = payment.time - (block.timestamp - payment.timestamp);
+    uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));
 
     // Ensure there is enough unsettled wei in the payment
     require(remainingWei >= _weiValue);
@@ -110,7 +110,20 @@ contract Syndicate {
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of
     // Payment at index
-    payments[index].weiValue -= _weiValue;
+    payments[index].weiValue = payments[index].weiPaid;
+    emit PaymentUpdated(index);
+    payments.push(Payment({
+      sender: payment.receiver,
+      receiver: payment.receiver,
+      timestamp: block.timestamp,
+      time: remainingTime,
+      weiValue: remainingWei - _weiValue,
+      weiPaid: 0,
+      isFork: true,
+      parentIndex: index
+    }));
+    emit PaymentCreated(payments.length - 1);
+    _forks[index][0] = payments.length - 1;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -121,17 +134,13 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    _forks[index].push(payments.length - 1);
-    emit PaymentUpdated(index);
+    _forks[index][1] = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
   }
 
-  /**
-   * Get the number of forks for the payment at index.
-   **/
-  function paymentForkCount(uint256 index) public view returns (uint256) {
+  function paymentForkIndexes(uint256 index) public view returns (uint256[2] memory) {
     assertPaymentIndexInRange(index);
-    return _forks[index].length;
+    return _forks[index];
   }
 
   /**
@@ -185,5 +194,12 @@ contract Syndicate {
    **/
   function min(uint a, uint b) private pure returns (uint) {
     return a < b ? a : b;
+  }
+
+  /**
+   * Return the larger of two values.
+   **/
+  function max(uint a, uint b) private pure returns (uint) {
+    return a > b ? a : b;
   }
 }

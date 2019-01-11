@@ -415,5 +415,15 @@ contract('Syndicate', accounts => {
     assert.ok(fork.isFork);
     assert.equal(fork.parentIndex, paymentIndex);
     assert.ok(!parent.isFork);
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
+      from: owner,
+      gas: 300000
+    });
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
+      from: owner,
+      gas: 300000
+    });
+    const forkCount = await contract.methods.paymentForkCount(paymentIndex).call();
+    assert.equal(3, forkCount);
   });
 });

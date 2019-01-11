@@ -24,7 +24,7 @@ contract Syndicate {
   Payment[] public payments;
 
   // A mapping of Payment index to forked payments that have been created
-  mapping (uint256 => uint256[2]) public _forks;
+  mapping (uint256 => uint256[2]) public forkIndexes;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -123,7 +123,7 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    _forks[index][0] = payments.length - 1;
+    forkIndexes[index][0] = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -136,13 +136,18 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    _forks[index][1] = payments.length - 1;
+    forkIndexes[index][1] = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
   }
 
   function paymentForkIndexes(uint256 index) public view returns (uint256[2] memory) {
     assertPaymentIndexInRange(index);
-    return _forks[index];
+    return forkIndexes[index];
+  }
+
+  function isPaymentForked(uint256 index) public view returns (bool) {
+    assertPaymentIndexInRange(index);
+    return forkIndexes[index][0] != 0 && forkIndexes[index][1] != 0;
   }
 
   /**

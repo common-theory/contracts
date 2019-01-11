@@ -94,9 +94,6 @@ contract Syndicate {
    * settled. Child payments can also be forked.
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
-    // Settle the payment to the current point in time
-    paymentSettle(index);
-
     Payment memory payment = payments[index];
     // Make sure the payment owner is operating
     require(msg.sender == payment.receiver);

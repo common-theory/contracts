@@ -369,6 +369,9 @@ contract('Syndicate', accounts => {
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await new Promise(r => setTimeout(r, 1000 * time / 10));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
+    });
     await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, weiValue).send({
       from: owner
     }), 'Should not be able to fork full balance partway into payment');

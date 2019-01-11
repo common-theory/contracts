@@ -80,6 +80,47 @@ contract Syndicate {
   }
 
   /**
+   * Forks a payment to another address for the duration of a payment. Allows
+   * responsibility of funds to be delegated to other addresses by payment
+   * recipient.
+   *
+   * Payment completion time is unaffected by forking, the only thing that
+   * changes is recipient.
+   *
+   * Payments can be forked until weiValue is 0, at which point the Payment is
+   * settled. Child payments can also be forked.
+   **/
+  function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
+    // Settle the payment to the current point in time
+    paymentSettle(index);
+
+    Payment memory payment = payments[index];
+    // Make sure the payment owner is operating
+    require(msg.sender == payment.receiver);
+
+    uint256 remainingWei = payment.weiValue - payment.weiPaid;
+    uint256 remainingTime = payment.time - (block.timestamp - payment.timestamp);
+
+    // Ensure there is enough unsettled wei in the payment
+    require(remainingWei >= _weiValue);
+    require(_weiValue > 0);
+
+    // Create a new Payment of _weiValue to _receiver over the remaining time of
+    // Payment at index
+    payments[index].weiValue -= _weiValue;
+    payments.push(Payment({
+      sender: msg.sender,
+      receiver: _receiver,
+      timestamp: block.timestamp,
+      time: remainingTime,
+      weiValue: _weiValue,
+      weiPaid: 0
+    }));
+    emit PaymentUpdated(index);
+    emit PaymentCreated(payments.length - 1);
+  }
+
+  /**
    * Accessor for determining if a given payment is fully settled.
    **/
   function isPaymentSettled(uint256 index) public view returns (bool) {

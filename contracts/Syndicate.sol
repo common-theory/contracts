@@ -1,13 +1,9 @@
 pragma solidity ^0.5.0;
 
 /**
- * The Syndicate contract
+ * Syndicate
  *
- * A way for distributed groups of people to work together and come to consensus
- * on use of funds.
- *
- * syndicate - noun
- * a group of individuals or syndicates combined to promote some common interest
+ * A way to distribute ownership of ether in time
  **/
 
 contract Syndicate {
@@ -130,6 +126,9 @@ contract Syndicate {
     emit PaymentCreated(payments.length - 1);
   }
 
+  /**
+   * Get the number of forks for the payment at index.
+   **/
   function paymentForkCount(uint256 index) public view returns (uint256) {
     assertPaymentIndexInRange(index);
     return _forks[index].length;

@@ -337,4 +337,114 @@ contract('Syndicate', accounts => {
       gas: 300000,
     }));
   });
+
+  it('should fail to fork if not receiver', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 5000;
+    const targetAddress = web3.eth.accounts.create().address;
+    const time = 100;
+    await contract.methods.deposit(targetAddress, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, 10).send({
+      from: owner
+    }), 'Non-receiver should not be able to fork payment');
+  });
+
+  it('should fail to fork if not enough weiValue remaining', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 1000 * time / 10));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: owner
+    });
+    await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, weiValue).send({
+      from: owner
+    }), 'Should not be able to fork full balance partway into payment');
+  });
+
+  it('should fail to fork if zero weiValue', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, 0).send({
+      from: owner
+    }), 'Should not be able to fork 0 weiValue');
+  });
+
+  it('should fork payment', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await new Promise(r => setTimeout(r, 5000))
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
+      from: owner,
+      gas: 500000
+    });
+    const parent = await contract.methods.payments(paymentIndex).call();
+    const fork1 = await contract.methods.payments(paymentIndex + 1).call();
+    const fork2 = await contract.methods.payments(paymentIndex + 2).call();
+    assert.ok(weiValue === +parent.weiValue + +fork1.weiValue + +fork2.weiValue);
+    assert.ok(+parent.timestamp + +parent.time === +fork1.timestamp + +fork1.time);
+    assert.ok(+parent.timestamp + +parent.time === +fork2.timestamp + +fork2.time);
+    assert.ok(fork1.isFork);
+    assert.ok(fork2.isFork);
+    assert.equal(fork1.parentIndex, paymentIndex);
+    assert.equal(fork2.parentIndex, paymentIndex);
+    assert.ok(!parent.isFork);
+    assert.ok(await contract.methods.isPaymentSettled(paymentIndex).call());
+    const forkIndexes = await contract.methods.paymentForkIndexes(paymentIndex).call();
+    assert.equal(paymentIndex + 1, forkIndexes[0]);
+    assert.equal(paymentIndex + 2, forkIndexes[1]);
+  });
+
+  it('isPaymentForked should return correct value', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.deposit(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    assert.ok(!await contract.methods.isPaymentForked(paymentIndex).call());
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
+      from: owner,
+      gas: 500000
+    });
+    assert.ok(await contract.methods.isPaymentForked(paymentIndex).call());
+  });
 });

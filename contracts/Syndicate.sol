@@ -21,6 +21,8 @@ contract Syndicate {
     uint256 time;
     uint256 weiValue;
     uint256 weiPaid;
+    bool isFork;
+    uint256 parentIndex;
   }
 
   Payment[] public payments;
@@ -50,7 +52,9 @@ contract Syndicate {
       timestamp: block.timestamp,
       time: _time,
       weiValue: _weiValue,
-      weiPaid: 0
+      weiPaid: 0,
+      isFork: false,
+      parentIndex: 0
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
@@ -114,7 +118,9 @@ contract Syndicate {
       timestamp: block.timestamp,
       time: remainingTime,
       weiValue: _weiValue,
-      weiPaid: 0
+      weiPaid: 0,
+      isFork: true,
+      parentIndex: index
     }));
     emit PaymentUpdated(index);
     emit PaymentCreated(payments.length - 1);

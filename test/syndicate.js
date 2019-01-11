@@ -403,27 +403,25 @@ contract('Syndicate', accounts => {
       gas: 300000
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    await new Promise(r => setTimeout(r, 1000 * time / 5))
-    await contract.methods.paymentFork(paymentIndex, owner, weiValue/100).send({
+    await new Promise(r => setTimeout(r, 5000))
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
       from: owner,
-      gas: 300000
+      gas: 500000
     });
     const parent = await contract.methods.payments(paymentIndex).call();
-    const fork = await contract.methods.payments(paymentIndex + 1).call();
-    assert.ok(weiValue === +parent.weiValue + +fork.weiValue);
-    assert.ok(+parent.timestamp + +parent.time === +fork.timestamp + +fork.time);
-    assert.ok(fork.isFork);
-    assert.equal(fork.parentIndex, paymentIndex);
+    const fork1 = await contract.methods.payments(paymentIndex + 1).call();
+    const fork2 = await contract.methods.payments(paymentIndex + 2).call();
+    assert.ok(weiValue === +parent.weiValue + +fork1.weiValue + +fork2.weiValue);
+    assert.ok(+parent.timestamp + +parent.time === +fork1.timestamp + +fork1.time);
+    assert.ok(+parent.timestamp + +parent.time === +fork2.timestamp + +fork2.time);
+    assert.ok(fork1.isFork);
+    assert.ok(fork2.isFork);
+    assert.equal(fork1.parentIndex, paymentIndex);
+    assert.equal(fork2.parentIndex, paymentIndex);
     assert.ok(!parent.isFork);
-    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
-      from: owner,
-      gas: 300000
-    });
-    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
-      from: owner,
-      gas: 300000
-    });
-    const forkCount = await contract.methods.paymentForkCount(paymentIndex).call();
-    assert.equal(3, forkCount);
+    assert.ok(await contract.methods.isPaymentSettled(paymentIndex).call());
+    const forkIndexes = await contract.methods.paymentForkIndexes(paymentIndex).call();
+    assert.equal(paymentIndex + 1, forkIndexes[0]);
+    assert.equal(paymentIndex + 2, forkIndexes[1]);
   });
 });

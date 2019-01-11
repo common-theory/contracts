@@ -28,7 +28,7 @@ contract Syndicate {
   Payment[] public payments;
 
   // A mapping of Payment index to forked payments that have been created
-  mapping (uint256 => uint256[]) public forks;
+  mapping (uint256 => uint256[]) public _forks;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -125,9 +125,14 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    forks[index].push(payments.length - 1);
+    _forks[index].push(payments.length - 1);
     emit PaymentUpdated(index);
     emit PaymentCreated(payments.length - 1);
+  }
+
+  function paymentForkCount(uint256 index) public view returns (uint256) {
+    assertPaymentIndexInRange(index);
+    return _forks[index].length;
   }
 
   /**

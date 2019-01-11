@@ -112,24 +112,26 @@ contract Syndicate {
     // Payment at index
     payments[index].weiValue = payments[index].weiPaid;
     emit PaymentUpdated(index);
-    payments.push(Payment({
-      sender: payment.receiver,
-      receiver: payment.receiver,
-      timestamp: block.timestamp,
-      time: remainingTime,
-      weiValue: remainingWei - _weiValue,
-      weiPaid: 0,
-      isFork: true,
-      parentIndex: index
-    }));
-    emit PaymentCreated(payments.length - 1);
-    _forks[index][0] = payments.length - 1;
+
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
       timestamp: block.timestamp,
       time: remainingTime,
       weiValue: _weiValue,
+      weiPaid: 0,
+      isFork: true,
+      parentIndex: index
+    }));
+    _forks[index][0] = payments.length - 1;
+    emit PaymentCreated(payments.length - 1);
+
+    payments.push(Payment({
+      sender: payment.receiver,
+      receiver: payment.receiver,
+      timestamp: block.timestamp,
+      time: remainingTime,
+      weiValue: remainingWei - _weiValue,
       weiPaid: 0,
       isFork: true,
       parentIndex: index

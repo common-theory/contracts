@@ -28,12 +28,14 @@ contract Syndicate {
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
+  event BalanceUpdated(address payable target);
 
   /**
    * Deposit to a given address over a certain amount of time.
    **/
   function deposit(address payable _receiver, uint256 _time) external payable {
     balances[msg.sender] += msg.value;
+    emit BalanceUpdated(msg.sender);
     pay(_receiver, msg.value, _time);
   }
 
@@ -57,6 +59,7 @@ contract Syndicate {
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
+    emit BalanceUpdated(msg.sender);
     emit PaymentCreated(payments.length - 1);
   }
 
@@ -68,6 +71,7 @@ contract Syndicate {
   function paymentSettle(uint256 index) public {
     uint256 owedWei = paymentWeiOwed(index);
     balances[payments[index].receiver] += owedWei;
+    emit BalanceUpdated(payments[index].receiver);
     payments[index].weiPaid += owedWei;
     emit PaymentUpdated(index);
   }
@@ -169,6 +173,7 @@ contract Syndicate {
   function withdraw(address payable target, uint256 weiValue) public {
     require(balances[target] >= weiValue);
     balances[target] -= weiValue;
+    emit BalanceUpdated(target);
     target.transfer(weiValue);
   }
 

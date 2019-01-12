@@ -155,8 +155,7 @@ contract Syndicate {
    **/
   function isPaymentSettled(uint256 index) public view returns (bool) {
     assertPaymentIndexInRange(index);
-    Payment memory payment = payments[index];
-    return payment.weiValue == payment.weiPaid;
+    return payments[index].weiValue == payments[index].weiPaid;
   }
 
   /**

@@ -19,12 +19,11 @@ contract Syndicate {
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
+    bool isForked;
+    uint256[2] forkIndexes;
   }
 
   Payment[] public payments;
-
-  // A mapping of Payment index to forked payments that have been created
-  mapping (uint256 => uint256[2]) public forkIndexes;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -47,6 +46,7 @@ contract Syndicate {
     require(_weiValue <= balances[msg.sender] && _weiValue > 0);
     // Verify the time is non-zero
     require(_time > 0);
+    uint256[2] memory _forkIndexes;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -55,7 +55,9 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: false,
-      parentIndex: 0
+      parentIndex: 0,
+      isForked: false,
+      forkIndexes: _forkIndexes
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
@@ -114,6 +116,7 @@ contract Syndicate {
     payments[index].weiValue = payments[index].weiPaid;
     emit PaymentUpdated(index);
 
+    uint256[2] memory _forkIndexes;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -122,9 +125,11 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index
+      parentIndex: index,
+      isForked: false,
+      forkIndexes: _forkIndexes
     }));
-    forkIndexes[index][0] = payments.length - 1;
+    payments[index].forkIndexes[0] = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -135,20 +140,14 @@ contract Syndicate {
       weiValue: remainingWei - _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index
+      parentIndex: index,
+      isForked: false,
+      forkIndexes: _forkIndexes
     }));
-    forkIndexes[index][1] = payments.length - 1;
+    payments[index].forkIndexes[1] = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
-  }
 
-  function paymentForkIndexes(uint256 index) public view returns (uint256[2] memory) {
-    assertPaymentIndexInRange(index);
-    return forkIndexes[index];
-  }
-
-  function isPaymentForked(uint256 index) public view returns (bool) {
-    assertPaymentIndexInRange(index);
-    return forkIndexes[index][0] != 0 && forkIndexes[index][1] != 0;
+    payments[index].isForked = true;
   }
 
   /**

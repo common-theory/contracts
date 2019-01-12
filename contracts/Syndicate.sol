@@ -47,7 +47,6 @@ contract Syndicate {
     require(_weiValue <= balances[msg.sender] && _weiValue > 0);
     // Verify the time is non-zero
     require(_time > 0);
-    uint256[2] memory _forkIndexes;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -118,7 +117,6 @@ contract Syndicate {
     payments[index].weiValue = payments[index].weiPaid;
     emit PaymentUpdated(index);
 
-    uint256[2] memory _forkIndexes;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,

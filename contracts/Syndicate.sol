@@ -20,7 +20,8 @@ contract Syndicate {
     bool isFork;
     uint256 parentIndex;
     bool isForked;
-    uint256[2] forkIndexes;
+    uint256 fork1Index;
+    uint256 fork2Index;
   }
 
   Payment[] public payments;
@@ -57,7 +58,8 @@ contract Syndicate {
       isFork: false,
       parentIndex: 0,
       isForked: false,
-      forkIndexes: _forkIndexes
+      fork1Index: 0,
+      fork2Index: 0
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
@@ -127,9 +129,10 @@ contract Syndicate {
       isFork: true,
       parentIndex: index,
       isForked: false,
-      forkIndexes: _forkIndexes
+      fork1Index: 0,
+      fork2Index: 0
     }));
-    payments[index].forkIndexes[0] = payments.length - 1;
+    payments[index].fork1Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -142,9 +145,10 @@ contract Syndicate {
       isFork: true,
       parentIndex: index,
       isForked: false,
-      forkIndexes: _forkIndexes
+      fork1Index: 0,
+      fork2Index: 0
     }));
-    payments[index].forkIndexes[1] = payments.length - 1;
+    payments[index].fork2Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments[index].isForked = true;

@@ -423,28 +423,11 @@ contract('Syndicate', accounts => {
     assert.equal(fork2.parentIndex, paymentIndex);
     assert.ok(!parent.isFork);
     assert.ok(await contract.methods.isPaymentSettled(paymentIndex).call());
-    const forkIndexes = await contract.methods.paymentForkIndexes(paymentIndex).call();
-    assert.equal(paymentIndex + 1, forkIndexes[0]);
-    assert.equal(paymentIndex + 2, forkIndexes[1]);
+    const updatedParent = await contract.methods.payments(paymentIndex).call();
+    assert.equal(true, updatedParent.isForked);
+    assert.equal(false, updatedParent.isFork);
+    assert.equal(paymentIndex + 1, updatedParent.fork1Index);
+    assert.equal(paymentIndex + 2, updatedParent.fork2Index);
   });
 
-  it('isPaymentForked should return correct value', async () => {
-    const _contract = await Syndicate.deployed();
-    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const owner = accounts[0];
-    const weiValue = 5000;
-    const time = 100;
-    await contract.methods.deposit(owner, time).send({
-      from: owner,
-      value: weiValue,
-      gas: 300000
-    });
-    const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    assert.ok(!await contract.methods.isPaymentForked(paymentIndex).call());
-    await contract.methods.paymentFork(paymentIndex, owner, weiValue/1000).send({
-      from: owner,
-      gas: 500000
-    });
-    assert.ok(await contract.methods.isPaymentForked(paymentIndex).call());
-  });
 });

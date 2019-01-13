@@ -19,12 +19,12 @@ contract Syndicate {
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
+    bool isForked;
+    uint256 fork1Index;
+    uint256 fork2Index;
   }
 
   Payment[] public payments;
-
-  // A mapping of Payment index to forked payments that have been created
-  mapping (uint256 => uint256[2]) public forkIndexes;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -55,7 +55,10 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: false,
-      parentIndex: 0
+      parentIndex: 0,
+      isForked: false,
+      fork1Index: 0,
+      fork2Index: 0
     }));
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
@@ -92,7 +95,7 @@ contract Syndicate {
    * recipient.
    *
    * Payment completion time is unaffected by forking, the only thing that
-   * changes is recipient.
+   * changes is recipient(s).
    *
    * Payments can be forked until weiValue is 0, at which point the Payment is
    * settled. Child payments can also be forked.
@@ -122,9 +125,12 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index
+      parentIndex: index,
+      isForked: false,
+      fork1Index: 0,
+      fork2Index: 0
     }));
-    forkIndexes[index][0] = payments.length - 1;
+    payments[index].fork1Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -135,20 +141,15 @@ contract Syndicate {
       weiValue: remainingWei - _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index
+      parentIndex: index,
+      isForked: false,
+      fork1Index: 0,
+      fork2Index: 0
     }));
-    forkIndexes[index][1] = payments.length - 1;
+    payments[index].fork2Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
-  }
 
-  function paymentForkIndexes(uint256 index) public view returns (uint256[2] memory) {
-    assertPaymentIndexInRange(index);
-    return forkIndexes[index];
-  }
-
-  function isPaymentForked(uint256 index) public view returns (bool) {
-    assertPaymentIndexInRange(index);
-    return forkIndexes[index][0] != 0 && forkIndexes[index][1] != 0;
+    payments[index].isForked = true;
   }
 
   /**
@@ -156,8 +157,7 @@ contract Syndicate {
    **/
   function isPaymentSettled(uint256 index) public view returns (bool) {
     assertPaymentIndexInRange(index);
-    Payment memory payment = payments[index];
-    return payment.weiValue == payment.weiPaid;
+    return payments[index].weiValue == payments[index].weiPaid;
   }
 
   /**

@@ -95,7 +95,7 @@ contract Syndicate {
    * recipient.
    *
    * Payment completion time is unaffected by forking, the only thing that
-   * changes is recipient.
+   * changes is recipient(s).
    *
    * Payments can be forked until weiValue is 0, at which point the Payment is
    * settled. Child payments can also be forked.

@@ -10,12 +10,20 @@ contract Syndicate {
 
   mapping (address => uint256) public balances;
 
+  struct Payee {
+    uint256 index;
+    address payable addr;
+    uint256 weiRate;
+  }
+
   struct Payment {
     address sender;
-    address payable receiver;
+    Payee[] payees;
+    mapping (address => uint256) payeeIndexes;
+    address root;
     uint256 timestamp;
     uint256 time;
-    uint256 weiValue;
+    uint256 weiRate;
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
@@ -42,17 +50,21 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address payable _receiver, uint256 _weiValue, uint256 _time) public {
+  function pay(address payable _receiver, uint256 _weiRate, uint256 _time) public {
+    // Create a payment of _weiRate wei/second for _time seconds.
     // Verify that the balance is there and value is non-zero
-    require(_weiValue <= balances[msg.sender] && _weiValue > 0);
+    uint256 weiValue = _weiRate * _time;
+    require(weiValue <= balances[msg.sender] && weiValue > 0);
     // Verify the time is non-zero
     require(_time > 0);
+    Payee[] memory _payees;
     payments.push(Payment({
       sender: msg.sender,
-      receiver: _receiver,
+      payees: _payees,
+      root: _receiver,
       timestamp: block.timestamp,
       time: _time,
-      weiValue: _weiValue,
+      weiRate: _weiRate,
       weiPaid: 0,
       isFork: false,
       parentIndex: 0,
@@ -60,10 +72,12 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
+    uint256 paymentIndex = payments.length - 1;
+    payments[paymentIndex].payeeIndexes[_receiver];
     // Update the balance value of the sender to effectively lock the funds in place
-    balances[msg.sender] -= _weiValue;
+    balances[msg.sender] -= weiValue;
     emit BalanceUpdated(msg.sender);
-    emit PaymentCreated(payments.length - 1);
+    emit PaymentCreated(paymentIndex);
   }
 
   /**
@@ -90,6 +104,38 @@ contract Syndicate {
   }
 
   /**
+   * Transfer ownership of value in a payment to another receiving address.
+   * Creates a new payee if necessary.
+   **/
+  function paymentTransferValue(uint256 index, uint256 _weiValue, address payable _receiver) public {
+    assertPaymentIndexInRange(index);
+    Payment memory payment = payments[index];
+    uint256 receiverIndex = payment.payeeIndexes[_receiver];
+    uint256 senderIndex = payment.payeeIndexes[msg.sender];
+
+    require(senderIndex != 0 || msg.sender == payment.root);
+    Payee memory sender = payment.payees[senderIndex];
+    // Ensure the sender is the message sender and exists
+    require(sender.addr == msg.sender);
+
+    // Ensure we've got the funds to do this
+    require(sender.weiValue >= _weiValue);
+
+    if (receiverIndex != 0 || msg.sender == _receiver) {
+      // The payee already exists, just modify the values
+      payment.payees[receiverIndex].weiValue += _weiValue;
+    } else {
+      // We need to create a new payee
+      payment.payees.push(Payee({
+        index: payment.payees.length,
+        weiValue: _weiValue,
+        addr: _receiver
+      }));
+    }
+    payment.payees[senderIndex].weiValue -= _weiValue;
+  }
+
+  /**
    * Forks a payment to another address for the duration of a payment. Allows
    * responsibility of funds to be delegated to other addresses by payment
    * recipient.
@@ -103,7 +149,7 @@ contract Syndicate {
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     Payment memory payment = payments[index];
     // Make sure the payment owner is operating
-    require(msg.sender == payment.receiver);
+    require(msg.sender == payment.root);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));

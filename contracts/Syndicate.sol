@@ -91,7 +91,7 @@ contract Syndicate {
   function paymentSettle(uint256 index) public {
     assertPaymentIndexInRange(index);
     if (isPaymentSettled(index)) return;
-    Payment memory payment = payments[index];
+    Payment storage payment = payments[index];
     // Guard against block timing attacks with the max operator
     uint256 elapsedTime = max(block.timestamp, payment.lastSettlementTimestamp) - payment.lastSettlementTimestamp;
     uint256 remainingWei = max(payment.weiValue, payment.weiPaid) - payment.weiPaid;
@@ -102,6 +102,7 @@ contract Syndicate {
       for (uint256 i = 0; i < payment.payees.length; i++) {
         uint256 weiOwed = remainingWei * payment.payees[i].weiRate / payment.currentWeiRate;
         balances[payment.payees[i].addr] += weiOwed;
+        payment.payees[i].weiPaid += weiOwed;
         totalWeiPaid += weiOwed;
         emit BalanceUpdated(payment.payees[i].addr);
       }
@@ -114,6 +115,7 @@ contract Syndicate {
       for (uint256 i = 0; i < payment.payees.length; i++) {
         uint256 weiOwed = payment.payees[i].weiRate * elapsedTime;
         balances[payment.payees[i].addr] += weiOwed;
+        payment.payees[i].weiPaid += weiOwed;
         totalWeiPaid += weiOwed;
         emit BalanceUpdated(payment.payees[i].addr);
       }
@@ -131,8 +133,8 @@ contract Syndicate {
 
     Payment storage payment = payments[index];
 
+    // Only executable by the payment root
     require(msg.sender == payment.root);
-
 
     uint256 receiverIndex = payment.payeeIndexes[_receiver];
     if (receiverIndex == 0 && _receiver != msg.sender) {

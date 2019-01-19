@@ -14,6 +14,7 @@ contract Syndicate {
     uint256 index;
     address payable addr;
     uint256 weiRate;
+    uint256 weiPaid;
   }
 
   struct Payment {
@@ -22,8 +23,11 @@ contract Syndicate {
     mapping (address => uint256) payeeIndexes;
     address root;
     uint256 timestamp;
+    uint256 lastSettlementTimestamp;
     uint256 time;
-    uint256 weiRate;
+    uint256 currentWeiRate;
+    uint256 maxWeiRate;
+    uint256 weiValue;
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
@@ -53,8 +57,8 @@ contract Syndicate {
   function pay(address payable _receiver, uint256 _weiRate, uint256 _time) public {
     // Create a payment of _weiRate wei/second for _time seconds.
     // Verify that the balance is there and value is non-zero
-    uint256 weiValue = _weiRate * _time;
-    require(weiValue <= balances[msg.sender] && weiValue > 0);
+    uint256 _weiValue = _weiRate * _time;
+    require(_weiValue <= balances[msg.sender] && _weiValue > 0);
     // Verify the time is non-zero
     require(_time > 0);
     Payee[] memory _payees;
@@ -63,8 +67,11 @@ contract Syndicate {
       payees: _payees,
       root: _receiver,
       timestamp: block.timestamp,
+      lastSettlementTimestamp: block.timestamp,
       time: _time,
-      weiRate: _weiRate,
+      currentWeiRate: 0,
+      maxWeiRate: _weiRate,
+      weiValue: _weiValue,
       weiPaid: 0,
       isFork: false,
       parentIndex: 0,
@@ -75,7 +82,7 @@ contract Syndicate {
     uint256 paymentIndex = payments.length - 1;
     payments[paymentIndex].payeeIndexes[_receiver];
     // Update the balance value of the sender to effectively lock the funds in place
-    balances[msg.sender] -= weiValue;
+    balances[msg.sender] -= _weiValue;
     emit BalanceUpdated(msg.sender);
     emit PaymentCreated(paymentIndex);
   }
@@ -86,21 +93,37 @@ contract Syndicate {
    * Can be called idempotently.
    **/
   function paymentSettle(uint256 index) public {
-    uint256 owedWei = paymentWeiOwed(index);
-    balances[payments[index].receiver] += owedWei;
-    emit BalanceUpdated(payments[index].receiver);
-    payments[index].weiPaid += owedWei;
-    emit PaymentUpdated(index);
-  }
-
-  /**
-   * Return the wei owed on a payment at the current block timestamp.
-   **/
-  function paymentWeiOwed(uint256 index) public view returns (uint256) {
     assertPaymentIndexInRange(index);
+    if (isPaymentSettled(index)) return;
     Payment memory payment = payments[index];
-    // Calculate owed wei based on current time and total wei owed/paid
-    return max(payment.weiPaid, payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time) - payment.weiPaid;
+    // Guard against block timing attacks with the max operator
+    uint256 elapsedTime = max(block.timestamp, payment.lastSettlementTimestamp) - payment.lastSettlementTimestamp;
+    uint256 remainingWei = max(payment.weiValue, payment.weiPaid) - payment.weiPaid;
+    uint256 totalWeiOwed = min(remainingWei, elapsedTime * payment.currentWeiRate);
+    uint256 totalWeiPaid = 0;
+    if (totalWeiOwed >= remainingWei) {
+      // Split the remaining wei proportionately
+      for (uint256 i = 0; i < payment.payees.length; i++) {
+        uint256 weiOwed = remainingWei * payment.payees[i].weiRate / payment.currentWeiRate;
+        balances[payment.payees[i].addr] += weiOwed;
+        totalWeiPaid += weiOwed;
+        emit BalanceUpdated(payment.payees[i].addr);
+      }
+      // There will be leftover value ~= remainingWei % payees.length
+      // This is small enough that we can just send it to the root
+      balances[payment.root] += payment.weiValue - payment.weiPaid;
+      assert(isPaymentSettled(index));
+    } else {
+      // Pay as usual
+      for (uint256 i = 0; i < payment.payees.length; i++) {
+        uint256 weiOwed = payment.payees[i].weiRate * elapsedTime;
+        balances[payment.payees[i].addr] += weiOwed;
+        totalWeiPaid += weiOwed;
+        emit BalanceUpdated(payment.payees[i].addr);
+      }
+      payments[index].weiPaid += totalWeiOwed;
+    }
+    emit PaymentUpdated(index);
   }
 
   /**

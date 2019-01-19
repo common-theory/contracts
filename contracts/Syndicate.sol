@@ -24,7 +24,6 @@ contract Syndicate {
     address root;
     uint256 timestamp;
     uint256 lastSettlementTimestamp;
-    uint256 time;
     uint256 currentWeiRate;
     uint256 maxWeiRate;
     uint256 weiValue;
@@ -54,21 +53,18 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address payable _receiver, uint256 _weiRate, uint256 _time) public {
+  function pay(address payable _root, uint256 _weiRate, uint256 _weiValue) public {
     // Create a payment of _weiRate wei/second for _time seconds.
     // Verify that the balance is there and value is non-zero
-    uint256 _weiValue = _weiRate * _time;
     require(_weiValue <= balances[msg.sender] && _weiValue > 0);
-    // Verify the time is non-zero
-    require(_time > 0);
+    require(_weiRate < _weiValue);
     Payee[] memory _payees;
     payments.push(Payment({
       sender: msg.sender,
       payees: _payees,
-      root: _receiver,
+      root: _root,
       timestamp: block.timestamp,
       lastSettlementTimestamp: block.timestamp,
-      time: _time,
       currentWeiRate: 0,
       maxWeiRate: _weiRate,
       weiValue: _weiValue,
@@ -80,7 +76,7 @@ contract Syndicate {
       fork2Index: 0
     }));
     uint256 paymentIndex = payments.length - 1;
-    payments[paymentIndex].payeeIndexes[_receiver];
+    payments[paymentIndex].payeeIndexes[_root] = 0;
     // Update the balance value of the sender to effectively lock the funds in place
     balances[msg.sender] -= _weiValue;
     emit BalanceUpdated(msg.sender);
@@ -127,35 +123,45 @@ contract Syndicate {
   }
 
   /**
-   * Transfer ownership of value in a payment to another receiving address.
+   * Update the weiRate for a payee in a payment.
    * Creates a new payee if necessary.
    **/
-  function paymentTransferValue(uint256 index, uint256 _weiValue, address payable _receiver) public {
+  function paymentUpdateRate(uint256 index, address payable _receiver, uint256 _newWeiRate) public {
     assertPaymentIndexInRange(index);
-    Payment memory payment = payments[index];
+
+    Payment storage payment = payments[index];
+
+    require(msg.sender == payment.root);
+
+
     uint256 receiverIndex = payment.payeeIndexes[_receiver];
-    uint256 senderIndex = payment.payeeIndexes[msg.sender];
-
-    require(senderIndex != 0 || msg.sender == payment.root);
-    Payee memory sender = payment.payees[senderIndex];
-    // Ensure the sender is the message sender and exists
-    require(sender.addr == msg.sender);
-
-    // Ensure we've got the funds to do this
-    require(sender.weiValue >= _weiValue);
-
-    if (receiverIndex != 0 || msg.sender == _receiver) {
-      // The payee already exists, just modify the values
-      payment.payees[receiverIndex].weiValue += _weiValue;
-    } else {
+    if (receiverIndex == 0 && _receiver != msg.sender) {
       // We need to create a new payee
       payment.payees.push(Payee({
         index: payment.payees.length,
-        weiValue: _weiValue,
+        weiRate: 0,
+        weiPaid: 0,
         addr: _receiver
       }));
+      payment.payeeIndexes[_receiver] = payment.payees.length - 1;
+      receiverIndex = payment.payees.length - 1;
     }
-    payment.payees[senderIndex].weiValue -= _weiValue;
+
+    Payee memory payee = payment.payees[receiverIndex];
+
+    // Ensure we're below the max flow rate
+    if (_newWeiRate > payee.weiRate) {
+      // We're increasing the wei rate
+      uint256 difference = _newWeiRate - payee.weiRate;
+      require(payment.currentWeiRate + difference <= payment.maxWeiRate);
+      payment.currentWeiRate += difference;
+    } else if (_newWeiRate < payee.weiRate) {
+      // We're decreasing the wei rate
+      uint256 difference = payee.weiRate - _newWeiRate;
+      require(payment.currentWeiRate - difference <= payment.maxWeiRate);
+      payment.currentWeiRate -= difference;
+    }
+    payment.payees[receiverIndex].weiRate = _newWeiRate;
   }
 
   /**

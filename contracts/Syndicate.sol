@@ -108,8 +108,8 @@ contract Syndicate {
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));
 
-    // Ensure there is enough unsettled wei in the payment
-    require(remainingWei >= _weiValue);
+    // Ensure there is more remainingWei than requested fork wei
+    require(remainingWei > _weiValue);
     require(_weiValue > 0);
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of

@@ -31,7 +31,7 @@ DOMAIN=coverage.commontheory.io
 CIDHOOKD_URL=cidhookd.commontheory.io
 
 # Load the old CID based on the current dnslinked value
-OLD_CID=$(jsipfs dns $DOMAIN)
+OLD_CID=$(npx dnslink resolve $DOMAIN)
 
 # Load the new CID by adding it to the local IPFS node
 NEW_CID=$(jsipfs add -Qr $COVERAGE_DIR)

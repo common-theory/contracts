@@ -27,7 +27,7 @@ jsipfs init
 jsipfs daemon &
 sleep 10
 
-DOMAIN=_dnslink.coverage.commontheory.io
+DOMAIN=coverage.commontheory.io
 CIDHOOKD_URL=cidhookd.commontheory.io
 
 # Load the old CID based on the current dnslinked value

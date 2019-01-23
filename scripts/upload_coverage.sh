@@ -44,5 +44,3 @@ npx cidhook $CIDHOOKD_URL $NEW_CID
 
 # Update the DNS record
 npx dnslink update $DOMAIN $NEW_CID
-
-wget $DOMAIN

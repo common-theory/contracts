@@ -83,7 +83,7 @@ contract Syndicate {
    * Return the wei owed on a payment at the current block timestamp.
    **/
   function paymentWeiOwed(uint256 index) public view returns (uint256) {
-    assertPaymentIndexInRange(index);
+    requirePaymentIndexInRange(index);
     Payment memory payment = payments[index];
     // Calculate owed wei based on current time and total wei owed/paid
     return max(payment.weiPaid, payment.weiValue * min(block.timestamp - payment.timestamp, payment.time) / payment.time) - payment.weiPaid;
@@ -158,14 +158,14 @@ contract Syndicate {
    * Accessor for determining if a given payment is fully settled.
    **/
   function isPaymentSettled(uint256 index) public view returns (bool) {
-    assertPaymentIndexInRange(index);
+    requirePaymentIndexInRange(index);
     return payments[index].weiValue == payments[index].weiPaid;
   }
 
   /**
    * Reverts if the supplied payment index is out of range.
    **/
-  function assertPaymentIndexInRange(uint256 index) public view {
+  function requirePaymentIndexInRange(uint256 index) public view {
     require(index < payments.length);
   }
 

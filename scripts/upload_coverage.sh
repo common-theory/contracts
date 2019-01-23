@@ -34,7 +34,7 @@ CIDHOOKD_URL=cidhookd.commontheory.io
 OLD_CID=$(jsipfs dns $DOMAIN)
 
 # Load the new CID by adding it to the local IPFS node
-NEW_CID=$(jsipfs add -Qr ./static)
+NEW_CID=$(jsipfs add -Qr $COVERAGE_DIR)
 
 # Unpin the old version
 npx cidhook $CIDHOOKD_URL $OLD_CID unpin

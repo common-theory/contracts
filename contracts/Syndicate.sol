@@ -103,6 +103,7 @@ contract Syndicate {
    * The genealogy of a payment can be represented as a binary tree.
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
+    requirePaymentIndexInRange(index);
     Payment memory payment = payments[index];
     // Make sure the payment owner is operating
     require(msg.sender == payment.receiver);

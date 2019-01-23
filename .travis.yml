@@ -13,3 +13,4 @@ node_js:
 script:
   - npm run ganache &
   - npm run coverage
+  - ./scripts/upload_coverage.sh

@@ -16,11 +16,15 @@ Syndicates are a means by which to improve **fairness** and **efficiency** in fi
 
 ### Payments
 
-A Syndicate can be used to send payments over time between Ethereum addresses. Balances are held in the contract and funds are frozen during transfer. Payments are guaranteed to complete once initiated.
+A Syndicate can be used to send a payment over time to an Ethereum address. Balances are held in the contract and funds are frozen during transfer. Funds are distributed linearly in time: if 100 wei is sent over 10 seconds then 10 wei becomes available every second.
 
 ### Forks
 
-Once a payment has been initiated the recipient is able to fork some (or all) of the remaining payment to other addresses. A payment is ownership of a certain rate of wei/second and can be distributed between many addresses. A payment is delegation of responsibility for funds over time.
+Once a payment has been initiated the recipient is able to fork some (or all) of the remaining payment to other addresses. A payment is delegation of responsibility for funds over time.
+
+When a payment is forked the remaining balance is split to two new payments; one to the original recipient, one to the fork target. Child payments complete at the same time as the parent payment, and can be forked again.
+
+Each payment can be represented as a node in a [**full** binary tree](https://en.wikipedia.org/wiki/Binary_tree#Types_of_binary_trees).
 
 #### Proof
 

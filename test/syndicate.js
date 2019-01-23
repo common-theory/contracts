@@ -249,18 +249,18 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests assertPaymentIndexInRange(uint256 paymentIndex) function.
+   * Tests requirePaymentIndexInRange(uint256 paymentIndex) function.
    **/
-  it('assertPaymentIndexInRange should fail for out of range index', async () => {
+  it('requirePaymentIndexInRange should fail for out of range index', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     await assert.rejects(
-      contract.methods.assertPaymentIndexInRange(-1).call(),
+      contract.methods.requirePaymentIndexInRange(-1).call(),
       'Method should throw for negative value'
     );
     const paymentCount = await contract.methods.paymentCount().call();
     await assert.rejects(
-      contract.methods.assertPaymentIndexInRange(+paymentCount).call(),
+      contract.methods.requirePaymentIndexInRange(+paymentCount).call(),
       'Method should throw for value longer than paymentCount'
     );
   });

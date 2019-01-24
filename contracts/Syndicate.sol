@@ -69,7 +69,7 @@ contract Syndicate {
     require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
     uint256 owedWei = paymentWeiOwed(index);
     payment.weiPaid += owedWei;
-    msg.sender.transfer(owedWei);
+    payment.receiver.transfer(owedWei);
     emit PaymentUpdated(index);
   }
 
@@ -115,7 +115,7 @@ contract Syndicate {
     emit PaymentUpdated(index);
 
     payments.push(Payment({
-      sender: msg.sender,
+      sender: payment.receiver,
       receiver: _receiver,
       timestamp: block.timestamp,
       time: remainingTime,

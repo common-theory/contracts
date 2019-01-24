@@ -26,7 +26,7 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests deposit(address payable _receiver, uint256 _time) with non-zero _time
+   * Tests pay(address payable _receiver, uint256 _time) with non-zero _time
    * argument.
    *
    * - Send Ether to Syndicate via pay()
@@ -85,7 +85,7 @@ contract('Syndicate', accounts => {
   });
 
   /**
-   * Tests deposit via fallback function, should fail to deposit.
+   * Tests pay via fallback function, should fail.
    **/
   it('fallback should fail', async () => {
     const _contract = await Syndicate.deployed();
@@ -185,7 +185,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.pay(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -206,7 +206,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.pay(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -223,7 +223,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.pay(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000

@@ -65,10 +65,10 @@ contract Syndicate {
    **/
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);
-    Payment memory payment = payments[index];
+    Payment storage payment = payments[index];
     require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
     uint256 owedWei = paymentWeiOwed(index);
-    payments[index].weiPaid += owedWei;
+    payment.weiPaid += owedWei;
     msg.sender.transfer(owedWei);
     emit PaymentUpdated(index);
   }
@@ -84,9 +84,9 @@ contract Syndicate {
   }
 
   /**
-   * Forks a payment to another address for the duration of a payment. Allows
-   * responsibility of funds to be delegated to other addresses by payment
-   * recipient.
+   * Forks a payment to another address for the remaining duration of a payment.
+   * Allows responsibility of funds to be delegated to other addresses by
+   * payment recipient or a delegate.
    *
    * Payment completion time is unaffected by forking, the only thing that
    * changes is recipient(s).
@@ -98,7 +98,7 @@ contract Syndicate {
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
-    Payment memory payment = payments[index];
+    Payment storage payment = payments[index];
     // Make sure the payment receiver or a delegate is operating
     require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
 
@@ -110,8 +110,8 @@ contract Syndicate {
     require(_weiValue > 0);
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of
-    // Payment at index
-    payments[index].weiValue = payments[index].weiPaid;
+    // payment at index
+    payment.weiValue = payment.weiPaid;
     emit PaymentUpdated(index);
 
     payments.push(Payment({
@@ -127,7 +127,7 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
-    payments[index].fork1Index = payments.length - 1;
+    payment.fork1Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -143,10 +143,10 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
-    payments[index].fork2Index = payments.length - 1;
+    payment.fork2Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
-    payments[index].isForked = true;
+    payment.isForked = true;
   }
 
   /**

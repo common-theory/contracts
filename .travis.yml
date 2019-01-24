@@ -13,13 +13,6 @@ node_js:
 jobs:
   include:
     - stage: build
-      if: branch != master
       script:
         - npm run ganache &
         - npm run coverage
-    - stage: build
-      if: branch == master
-      script:
-        - npm run ganache &
-        - npm run coverage
-        - ./scripts/upload_coverage.sh

@@ -2,6 +2,8 @@ const Syndicate = artifacts.require('Syndicate');
 const assert = require('assert');
 const BN = require('bn.js');
 
+const DEFAULT_GAS = 300000;
+
 /**
  * Syndicate contract tests
  **/
@@ -21,7 +23,7 @@ contract('Syndicate', accounts => {
     await assert.rejects(contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     }));
   });
 
@@ -46,7 +48,7 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     const payment = await contract.methods.payments(paymentIndex).call();
@@ -60,7 +62,7 @@ contract('Syndicate', accounts => {
       // Settle the Payment at the current point in time
       const receipt = await contract.methods.paymentSettle(paymentIndex).send({
         from: owner,
-        gas: 300000,
+        gas: DEFAULT_GAS,
         gasPrice
       });
       const weiCost = new BN(receipt.cumulativeGasUsed).mul(gasPrice);
@@ -94,16 +96,16 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(receiver, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
       from: owner,
-      gas: 300000
+      gas: DEFAULT_GAS
     }));
     await contract.methods.paymentSettle(paymentIndex).send({
       from: receiver,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
   });
 
@@ -134,7 +136,7 @@ contract('Syndicate', accounts => {
     const time = 1;
     await assert.rejects(contract.methods.paymentCreate(owner, time).send({
       from: owner,
-      gas: 300000
+      gas: DEFAULT_GAS
     }));
   });
 
@@ -166,20 +168,20 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: 100,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
     await new Promise(r => setTimeout(r, time * 1000 / 4));
     await contract.methods.paymentSettle(paymentIndex).send({
       from: owner,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     assert.equal(false, await contract.methods.isPaymentSettled(paymentIndex).call());
     await new Promise(r => setTimeout(r, time * 1000));
     await contract.methods.paymentSettle(paymentIndex).send({
       from: owner,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
   });
@@ -194,7 +196,7 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(targetAddress, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, 10).send({
@@ -211,7 +213,7 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await new Promise(r => setTimeout(r, 1000 * time / 10));
@@ -232,7 +234,7 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, 0).send({
@@ -249,7 +251,7 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     await new Promise(r => setTimeout(r, 5000))
@@ -287,17 +289,17 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount() - 1;
     await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
       from: delegate,
-      gas: 300000
+      gas: DEFAULT_GAS
     }));
     await contract.methods.delegate(delegate, true);
     await contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
       from: delegate,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
   });
 
@@ -312,17 +314,17 @@ contract('Syndicate', accounts => {
     await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount() - 1;
     await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
       from: delegate,
-      gas: 300000
+      gas: DEFAULT_GAS
     }));
     await contract.methods.delegate(delegate, true);
     await contract.methods.paymentFork(paymentIndex).send({
       from: delegate,
-      gas: 300000
+      gas: DEFAULT_GAS
     });
   });
 

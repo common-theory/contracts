@@ -8,20 +8,17 @@ const BN = require('bn.js');
 contract('Syndicate', accounts => {
 
   /**
-   * Tests deposit(address payable _receiver, uint256 _time) with a zero _time
+   * Tests pay(address payable _receiver, uint256 _time) with a zero _time
    * argument.
-   *
-   * - Send Ether to Syndicate via deposit()
-   * - Verify same transaction payment settlement
    **/
-  it('should fail to deposit instantly', async () => {
+  it('should fail to pay instantly', async () => {
     const _contract = await Syndicate.deployed();
     // Get a reference to a normal web3.eth.Contract, not a TruffleContract
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const weiValue = 100;
     const time = 0;
-    await assert.rejects(contract.methods.deposit(owner, 0).send({
+    await assert.rejects(contract.methods.pay(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -32,11 +29,11 @@ contract('Syndicate', accounts => {
    * Tests deposit(address payable _receiver, uint256 _time) with non-zero _time
    * argument.
    *
-   * - Send Ether to Syndicate via deposit()
+   * - Send Ether to Syndicate via pay()
    * - Verify payment settlement every network block rate (or 1 second) until
    *   30 seconds after payment settlement.
    **/
-  it('should deposit over time', async () => {
+  it('should pay over time', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
@@ -44,13 +41,9 @@ contract('Syndicate', accounts => {
     const time = process.env.CI ? 150 : 30;
     // Time past the payment completion time to test
     const overrunTime = 30;
-    // Flush the Syndicate balance from the owner address
-    await contract.methods.withdraw().send({
-      from: owner,
-      gas: 300000
-    });
+    const gasPrice = new BN(await web3.eth.getGasPrice());
     // Deposit from owner address
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.pay(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -58,15 +51,21 @@ contract('Syndicate', accounts => {
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
     const payment = await contract.methods.payments(paymentIndex).call();
 
+    const ownerWei = new BN(await web3.eth.getBalance(owner));
+
     // Check payment values over time
     while (true) {
       // Wait 1 second between loop iterations
       await new Promise(r => setTimeout(r, 1000));
       // Settle the Payment at the current point in time
-      await contract.methods.paymentSettle(paymentIndex).send({
+      const receipt = await contract.methods.paymentSettle(paymentIndex).send({
         from: owner,
-        gas: 300000
+        gas: 300000,
+        gasPrice
       });
+      const weiCost = new BN(receipt.cumulativeGasUsed).mul(gasPrice);
+      ownerWei.isub(weiCost);
+
       const _payment = await contract.methods.payments(paymentIndex).call();
       const now = Math.floor(new Date() / 1000);
       const totalWeiOwed = +payment.weiValue * Math.min(now - +payment.timestamp, +payment.time) / +payment.time;
@@ -77,30 +76,22 @@ contract('Syndicate', accounts => {
       if (now > +payment.timestamp + +payment.time + overrunTime) break;
     }
 
-    const balance = await contract.methods.balances(owner).call();
-    // Ensure balance is equal to payment.weiValue
-    assert.equal(balance, weiValue);
+    const newOwnerWei = new BN(await web3.eth.getBalance(owner));
+
+    // Ensure the address balance is properly updated
+    assert.equal(newOwnerWei.sub(ownerWei).toString(), weiValue.toString());
     // Verify that isPaymentSettled() is operating sanely
     assert.ok(await contract.methods.isPaymentSettled(paymentIndex));
   });
 
   /**
-   * Tests deposit via fallback function, should function same as deposit() with
-   * a zero _time value.
-   *
-   * - Send Ether to Syndicate contract
-   * - Verify same transaction payment settlement
+   * Tests deposit via fallback function, should fail to deposit.
    **/
   it('fallback should fail', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[1];
     const weiValue = 100;
-    // Flush the Syndicate balance from the owner address
-    await contract.methods.withdraw().send({
-      from: owner,
-      gas: 300000
-    });
     await assert.rejects(web3.eth.sendTransaction({
       from: owner,
       to: _contract.address,
@@ -118,21 +109,10 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 100;
     const time = 1;
-    // Flush the Syndicate balance from the owner address
-    await contract.methods.withdraw().send({
+    await assert.rejects(contract.methods.pay(owner, time).send({
       from: owner,
       gas: 300000
-    });
-    await contract.methods.deposit(owner, time).send({
-      from: owner,
-      value: weiValue,
-      gas: 300000
-    });
-    await new Promise(r => setTimeout(r, 2000))
-    await assert.rejects(contract.methods.pay(accounts[1], 0, 0).send({
-      from: owner,
-      gas: 300000
-    }), '0 value payment should fail');
+    }));
   });
 
   /**

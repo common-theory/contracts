@@ -54,7 +54,8 @@ contract Syndicate {
   /**
    * Settle an individual payment at the current point in time.
    *
-   * Can be called idempotently.
+   * Transfers the owedWei at the current point in time to the receiving
+   * address.
    **/
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);

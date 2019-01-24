@@ -4,12 +4,10 @@
 
 set -e
 
-# Intended to be run in a CI environment
-if [ -z "$CI" ];
-then
-  echo 'Non-ci environment detected, exiting'
-  exit 1
-fi
+# Load from .env
+set -o allexport
+[ -f .env ] && source .env
+set +o allexport
 
 COVERAGE_DIR=$(pwd)/coverage
 
@@ -19,13 +17,13 @@ then
   exit 1
 fi
 
-# Install jsipfs
-npm i -g ipfs
-
 # Start a local IPFS node
-jsipfs init
 jsipfs daemon &
 sleep 10
+JSPID=$!
+
+# Check that the process is up
+ps -ax | grep $JSPID | grep -v grep > /dev/null
 
 DOMAIN=coverage.commontheory.io
 CIDHOOKD_URL=cidhookd.commontheory.io
@@ -44,3 +42,7 @@ npx cidhook $CIDHOOKD_URL $NEW_CID
 
 # Update the DNS record
 npx dnslink update $DOMAIN $NEW_CID
+
+curl $DOMAIN > /dev/null 2> /dev/null
+
+kill $JSPID

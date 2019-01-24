@@ -139,11 +139,8 @@ contract('Syndicate', accounts => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
-    await contract.methods.withdraw().send({
-      from: owner
-    });
     const time = 60;
-    await contract.methods.deposit(owner, time).send({
+    await contract.methods.pay(owner, time).send({
       from: owner,
       value: 100,
       gas: 300000
@@ -164,23 +161,6 @@ contract('Syndicate', accounts => {
     assert.equal(true, await contract.methods.isPaymentSettled(paymentIndex).call());
   });
 
-  /**
-   * Payment should fail for value larger than balance
-   **/
-  it('should fail to make payment larger than balance', async () => {
-    const _contract = await Syndicate.deployed();
-    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const owner = accounts[0];
-    const balance = await contract.methods.balances(owner).call();
-    await assert.rejects(
-      contract.methods.pay(accounts[3], +balance + 1, 0).send({
-        from: owner,
-        gas: 300000
-      }),
-      'Pay function should fail for weiValue > balance'
-    );
-  });
-
   it('should fail to fork if not receiver', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
@@ -188,7 +168,7 @@ contract('Syndicate', accounts => {
     const weiValue = 5000;
     const targetAddress = web3.eth.accounts.create().address;
     const time = 100;
-    await contract.methods.deposit(targetAddress, time).send({
+    await contract.methods.pay(targetAddress, time).send({
       from: owner,
       value: weiValue,
       gas: 300000

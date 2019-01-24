@@ -66,7 +66,7 @@ contract Syndicate {
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);
     Payment storage payment = payments[index];
-    require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
+    requireExecutionAllowed(payment.receiver);
     uint256 owedWei = paymentWeiOwed(index);
     payment.weiPaid += owedWei;
     payment.receiver.transfer(owedWei);
@@ -100,7 +100,7 @@ contract Syndicate {
     requirePaymentIndexInRange(index);
     Payment storage payment = payments[index];
     // Make sure the payment receiver or a delegate is operating
-    require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
+    requireExecutionAllowed(payment.receiver);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));
@@ -162,6 +162,13 @@ contract Syndicate {
    **/
   function requirePaymentIndexInRange(uint256 index) public view {
     require(index < payments.length);
+  }
+
+  /**
+   * Checks if msg.sender is allowed to modify payments on behalf of receiver.
+   **/
+  function requireExecutionAllowed(address payable receiver) public view {
+    require(msg.sender == receiver || delegates[receiver][msg.sender] == true);
   }
 
   /**

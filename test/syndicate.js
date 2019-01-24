@@ -84,6 +84,29 @@ contract('Syndicate', accounts => {
     assert.ok(await contract.methods.isPaymentSettled(paymentIndex));
   });
 
+  it('should fail to settle if not receiver', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const receiver = accounts[1];
+    const weiValue = 100;
+    const time = 100;
+    await contract.methods.pay(receiver, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount().call() - 1;
+    await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
+      from: owner,
+      gas: 300000
+    }));
+    await contract.methods.paymentSettle(paymentIndex).send({
+      from: receiver,
+      gas: 300000
+    });
+  });
+
   /**
    * Tests pay via fallback function, should fail.
    **/

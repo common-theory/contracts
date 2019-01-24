@@ -10,7 +10,16 @@ language: node_js
 node_js:
   10
 
-script:
-  - npm run ganache &
-  - npm run coverage
-  - ./scripts/upload_coverage.sh
+jobs:
+  include:
+    - stage: build
+      if: branch != master
+      script:
+        - npm run ganache &
+        - npm run coverage
+    - stage: build
+      if: branch == master
+      script:
+        - npm run ganache &
+        - npm run coverage
+        - ./scripts/upload_coverage.sh

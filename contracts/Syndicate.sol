@@ -8,8 +8,6 @@ pragma solidity ^0.5.0;
 
 contract Syndicate {
 
-  mapping (address => uint256) public balances;
-
   struct Payment {
     address sender;
     address payable receiver;
@@ -28,23 +26,13 @@ contract Syndicate {
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
-  event BalanceUpdated(address payable target);
-
-  /**
-   * Deposit to a given address over a certain amount of time.
-   **/
-  function deposit(address payable _receiver, uint256 _time) external payable {
-    balances[msg.sender] += msg.value;
-    emit BalanceUpdated(msg.sender);
-    pay(_receiver, msg.value, _time);
-  }
 
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address payable _receiver, uint256 _weiValue, uint256 _time) public {
-    // Verify that the balance is there and value is non-zero
-    require(_weiValue <= balances[msg.sender] && _weiValue > 0);
+  function paymentCreate(address payable _receiver, uint256 _time) public payable {
+    // Verify that value has been sent
+    require(msg.value > 0);
     // Verify the time is non-zero
     require(_time > 0);
     payments.push(Payment({
@@ -52,7 +40,7 @@ contract Syndicate {
       receiver: _receiver,
       timestamp: block.timestamp,
       time: _time,
-      weiValue: _weiValue,
+      weiValue: msg.value,
       weiPaid: 0,
       isFork: false,
       parentIndex: 0,
@@ -60,22 +48,21 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
-    // Update the balance value of the sender to effectively lock the funds in place
-    balances[msg.sender] -= _weiValue;
-    emit BalanceUpdated(msg.sender);
     emit PaymentCreated(payments.length - 1);
   }
 
   /**
    * Settle an individual payment at the current point in time.
    *
-   * Can be called idempotently.
+   * Transfers the owedWei at the current point in time to the receiving
+   * address.
    **/
   function paymentSettle(uint256 index) public {
+    requirePaymentIndexInRange(index);
+    require(msg.sender == payments[index].receiver);
     uint256 owedWei = paymentWeiOwed(index);
-    balances[payments[index].receiver] += owedWei;
-    emit BalanceUpdated(payments[index].receiver);
     payments[index].weiPaid += owedWei;
+    msg.sender.transfer(owedWei);
     emit PaymentUpdated(index);
   }
 
@@ -168,30 +155,6 @@ contract Syndicate {
    **/
   function requirePaymentIndexInRange(uint256 index) public view {
     require(index < payments.length);
-  }
-
-  /**
-   * Withdraw target address balance from Syndicate to ether.
-   **/
-  function withdraw(address payable target, uint256 weiValue) public {
-    require(balances[target] >= weiValue);
-    balances[target] -= weiValue;
-    emit BalanceUpdated(target);
-    target.transfer(weiValue);
-  }
-
-  /**
-   * One argument, target address.
-   **/
-  function withdraw(address payable target) public {
-    withdraw(target, balances[target]);
-  }
-
-  /**
-   * No arguments, withdraws full balance to sender from sender balance.
-   **/
-  function withdraw() public {
-    withdraw(msg.sender, balances[msg.sender]);
   }
 
   /**

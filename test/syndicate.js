@@ -276,4 +276,54 @@ contract('Syndicate', accounts => {
     assert.equal(paymentIndex + 2, updatedParent.fork2Index);
   });
 
+  it('should delegate forking ability', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const delegate = accounts[1];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.delegate(delegate, false);
+    await contract.methods.paymentCreate(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount() - 1;
+    await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
+      from: delegate,
+      gas: 300000
+    }));
+    await contract.methods.delegate(delegate, true);
+    await contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
+      from: delegate,
+      gas: 300000
+    });
+  });
+
+  it('should delegate settlement ability', async () => {
+    const _contract = await Syndicate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const owner = accounts[0];
+    const delegate = accounts[1];
+    const weiValue = 5000;
+    const time = 100;
+    await contract.methods.delegate(delegate, false);
+    await contract.methods.paymentCreate(owner, time).send({
+      from: owner,
+      value: weiValue,
+      gas: 300000
+    });
+    const paymentIndex = await contract.methods.paymentCount() - 1;
+    await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
+      from: delegate,
+      gas: 300000
+    }));
+    await contract.methods.delegate(delegate, true);
+    await contract.methods.paymentFork(paymentIndex).send({
+      from: delegate,
+      gas: 300000
+    });
+  });
+
 });

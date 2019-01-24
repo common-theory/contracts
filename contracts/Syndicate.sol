@@ -27,6 +27,16 @@ contract Syndicate {
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
 
+  mapping(address => mapping (address => bool)) public delegates;
+
+  /**
+   * Change whether _delegate can settle and fork payments on behalf of
+   * msg.sender.
+   **/
+  function delegate(address _delegate, bool delegated) public {
+    delegates[msg.sender][_delegate] = delegated;
+  }
+
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
@@ -59,10 +69,11 @@ contract Syndicate {
    **/
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);
-    require(msg.sender == payments[index].receiver);
+    Payment storage payment = payments[index];
+    requireExecutionAllowed(payment.receiver);
     uint256 owedWei = paymentWeiOwed(index);
-    payments[index].weiPaid += owedWei;
-    msg.sender.transfer(owedWei);
+    payment.weiPaid += owedWei;
+    payment.receiver.transfer(owedWei);
     emit PaymentUpdated(index);
   }
 
@@ -77,9 +88,9 @@ contract Syndicate {
   }
 
   /**
-   * Forks a payment to another address for the duration of a payment. Allows
-   * responsibility of funds to be delegated to other addresses by payment
-   * recipient.
+   * Forks a payment to another address for the remaining duration of a payment.
+   * Allows responsibility of funds to be delegated to other addresses by
+   * payment recipient or a delegate.
    *
    * Payment completion time is unaffected by forking, the only thing that
    * changes is recipient(s).
@@ -91,9 +102,9 @@ contract Syndicate {
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
-    Payment memory payment = payments[index];
-    // Make sure the payment owner is operating
-    require(msg.sender == payment.receiver);
+    Payment storage payment = payments[index];
+    // Make sure the payment receiver or a delegate is operating
+    requireExecutionAllowed(payment.receiver);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));
@@ -103,12 +114,12 @@ contract Syndicate {
     require(_weiValue > 0);
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of
-    // Payment at index
-    payments[index].weiValue = payments[index].weiPaid;
+    // payment at index
+    payment.weiValue = payment.weiPaid;
     emit PaymentUpdated(index);
 
     payments.push(Payment({
-      sender: msg.sender,
+      sender: payment.receiver,
       receiver: _receiver,
       timestamp: block.timestamp,
       time: remainingTime,
@@ -120,7 +131,7 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
-    payments[index].fork1Index = payments.length - 1;
+    payment.fork1Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
     payments.push(Payment({
@@ -136,10 +147,10 @@ contract Syndicate {
       fork1Index: 0,
       fork2Index: 0
     }));
-    payments[index].fork2Index = payments.length - 1;
+    payment.fork2Index = payments.length - 1;
     emit PaymentCreated(payments.length - 1);
 
-    payments[index].isForked = true;
+    payment.isForked = true;
   }
 
   /**
@@ -155,6 +166,13 @@ contract Syndicate {
    **/
   function requirePaymentIndexInRange(uint256 index) public view {
     require(index < payments.length);
+  }
+
+  /**
+   * Checks if msg.sender is allowed to modify payments on behalf of receiver.
+   **/
+  function requireExecutionAllowed(address payable receiver) public view {
+    require(msg.sender == receiver || delegates[receiver][msg.sender] == true);
   }
 
   /**

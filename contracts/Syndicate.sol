@@ -27,6 +27,12 @@ contract Syndicate {
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
 
+  mapping(address => mapping (address => bool)) public delegates;
+
+  function delegate(address _delegate, bool delegated) public {
+    delegates[msg.sender][_delegate] = delegated;
+  }
+
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
@@ -59,7 +65,8 @@ contract Syndicate {
    **/
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);
-    require(msg.sender == payments[index].receiver);
+    Payment memory payment = payments[index];
+    require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
     uint256 owedWei = paymentWeiOwed(index);
     payments[index].weiPaid += owedWei;
     msg.sender.transfer(owedWei);
@@ -92,8 +99,8 @@ contract Syndicate {
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
     Payment memory payment = payments[index];
-    // Make sure the payment owner is operating
-    require(msg.sender == payment.receiver);
+    // Make sure the payment receiver or a delegate is operating
+    require(msg.sender == payment.receiver || delegates[payment.receiver][msg.sender]);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));

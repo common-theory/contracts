@@ -30,7 +30,7 @@ contract Syndicate {
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
-  function pay(address payable _receiver, uint256 _time) public payable {
+  function paymentCreate(address payable _receiver, uint256 _time) public payable {
     // Verify that value has been sent
     require(msg.value > 0);
     // Verify the time is non-zero

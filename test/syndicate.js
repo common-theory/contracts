@@ -18,7 +18,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 100;
     const time = 0;
-    await assert.rejects(contract.methods.pay(owner, time).send({
+    await assert.rejects(contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -43,7 +43,7 @@ contract('Syndicate', accounts => {
     const overrunTime = 30;
     const gasPrice = new BN(await web3.eth.getGasPrice());
     // Deposit from owner address
-    await contract.methods.pay(owner, time).send({
+    await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -91,7 +91,7 @@ contract('Syndicate', accounts => {
     const receiver = accounts[1];
     const weiValue = 100;
     const time = 100;
-    await contract.methods.pay(receiver, time).send({
+    await contract.methods.paymentCreate(receiver, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -132,7 +132,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 100;
     const time = 1;
-    await assert.rejects(contract.methods.pay(owner, time).send({
+    await assert.rejects(contract.methods.paymentCreate(owner, time).send({
       from: owner,
       gas: 300000
     }));
@@ -163,7 +163,7 @@ contract('Syndicate', accounts => {
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
     const time = 60;
-    await contract.methods.pay(owner, time).send({
+    await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: 100,
       gas: 300000
@@ -191,7 +191,7 @@ contract('Syndicate', accounts => {
     const weiValue = 5000;
     const targetAddress = web3.eth.accounts.create().address;
     const time = 100;
-    await contract.methods.pay(targetAddress, time).send({
+    await contract.methods.paymentCreate(targetAddress, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -208,7 +208,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.pay(owner, time).send({
+    await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -229,7 +229,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.pay(owner, time).send({
+    await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000
@@ -246,7 +246,7 @@ contract('Syndicate', accounts => {
     const owner = accounts[0];
     const weiValue = 5000;
     const time = 100;
-    await contract.methods.pay(owner, time).send({
+    await contract.methods.paymentCreate(owner, time).send({
       from: owner,
       value: weiValue,
       gas: 300000

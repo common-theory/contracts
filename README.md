@@ -1,4 +1,4 @@
-# contracts [![Build Status](https://travis-ci.org/common-theory/contracts.svg?branch=master)](https://travis-ci.org/common-theory/contracts) [![Coverage](https://raw.githubusercontent.com/common-theory/common-dac/master/test/badge.svg?sanitize=true)](https://gateway.commontheory.io/ipns/coverage.commontheory.io/)
+# contracts [![Build Status](https://travis-ci.org/common-theory/contracts.svg?branch=master)](https://travis-ci.org/common-theory/contracts) [![Coverage](https://raw.githubusercontent.com/common-theory/common-dac/master/test/badge.svg?sanitize=true)](https://gateway.commontheory.io/ipns/coverage.commontheory.io/contracts/index.html)
 
 The common theory contracts, with an overview of use. An open-source user interface for interacting with the latest deployed contracts can be found [here](https://github.com/common-theory/common-dapp).
 

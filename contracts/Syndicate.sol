@@ -29,6 +29,10 @@ contract Syndicate {
 
   mapping(address => mapping (address => bool)) public delegates;
 
+  /**
+   * Change whether _delegate can settle and fork payments on behalf of
+   * msg.sender.
+   **/
   function delegate(address _delegate, bool delegated) public {
     delegates[msg.sender][_delegate] = delegated;
   }

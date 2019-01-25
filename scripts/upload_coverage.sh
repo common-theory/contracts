@@ -35,10 +35,10 @@ OLD_CID=$(npx dnslink resolve $DOMAIN)
 NEW_CID=$(jsipfs add -Qr $COVERAGE_DIR)
 
 # Unpin the old version
-npx cidhook $CIDHOOKD_URL $OLD_CID unpin
+npx cidhook unpin $OLD_CID -s $CIDHOOKD_URL
 
 # Pin the new version
-npx cidhook $CIDHOOKD_URL $NEW_CID
+npx cidhook pin $NEW_CID -s $CIDHOOKD_URL
 
 # Update the DNS record
 npx dnslink update $DOMAIN $NEW_CID

@@ -26,6 +26,10 @@ When a payment is forked the remaining balance is split to two new payments; one
 
 Each payment can be represented as a node in a [**full** binary tree](https://en.wikipedia.org/wiki/Binary_tree#Types_of_binary_trees).
 
+### Delegation
+
+The Syndicate includes a `delegate` function that allows an address to delegate the ability to fork and withdraw payments. Forks can be made to any address; withdrawals always go to the payment recipient.
+
 #### Proof
 
 Unit tests cover all functions and logical paths, see the latest build log [here](https://travis-ci.org/common-theory/contracts). Mathematical proofs of functions can be found [here](https://github.com/common-theory/contracts/blob/master/proofs).

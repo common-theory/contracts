@@ -152,7 +152,7 @@ contract Syndicate {
   }
 
   /// @notice Accessor for payments array length.
-  /// @returns The number of payments that exist in the Syndicate
+  /// @return The number of payments that exist in the Syndicate
   function paymentCount() public view returns (uint) {
     return payments.length;
   }

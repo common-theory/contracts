@@ -17,10 +17,10 @@ contract Syndicate {
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
-    uint256[] forks;
   }
 
   Payment[] public payments;
+  mapping(uint256 => uint256[]) public paymentForks;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -43,7 +43,6 @@ contract Syndicate {
     require(msg.value > 0);
     // Verify the time is non-zero
     require(_time > 0);
-    uint256[] memory _forks;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -52,9 +51,9 @@ contract Syndicate {
       weiValue: msg.value,
       weiPaid: 0,
       isFork: false,
-      parentIndex: 0,
-      forks: _forks
+      parentIndex: 0
     }));
+    paymentForks[payments.length - 1] = new uint256[](0);
     emit PaymentCreated(payments.length - 1);
   }
 
@@ -114,7 +113,6 @@ contract Syndicate {
     payment.weiValue -= _weiValue;
 
     // Now create the forked payment
-    uint256[] memory _forks;
     payments.push(Payment({
       sender: payment.receiver,
       receiver: _receiver,
@@ -123,10 +121,10 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index,
-      forks: _forks
+      parentIndex: index
     }));
-    payment.forks.push(payments.length - 1);
+    paymentForks[payments.length - 1] = new uint256[](0);
+    paymentForks[index].push(payments.length - 1);
     emit PaymentUpdated(index);
     emit PaymentCreated(payments.length - 1);
   }
@@ -136,7 +134,15 @@ contract Syndicate {
    **/
   function isPaymentForked(uint256 index) public view returns (bool) {
     requirePaymentIndexInRange(index);
-    return payments[index].forks.length > 0;
+    return paymentForks[index].length > 0;
+  }
+
+  /**
+   * Accessor for payment fork count.
+   **/
+  function paymentForkCount(uint256 index) public view returns (uint256) {
+    requirePaymentIndexInRange(index);
+    return paymentForks[index].length;
   }
 
   /**

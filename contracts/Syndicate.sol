@@ -25,16 +25,6 @@ contract Syndicate {
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
 
-  mapping(address => mapping (address => bool)) public delegates;
-
-  /**
-   * Change whether _delegate can settle and fork payments on behalf of
-   * msg.sender.
-   **/
-  function delegate(address _delegate, bool delegated) public {
-    delegates[msg.sender][_delegate] = delegated;
-  }
-
   /**
    * Pay from sender to receiver a certain amount over a certain amount of time.
    **/
@@ -66,7 +56,6 @@ contract Syndicate {
   function paymentSettle(uint256 index) public {
     requirePaymentIndexInRange(index);
     Payment storage payment = payments[index];
-    requireExecutionAllowed(payment.receiver);
     uint256 owedWei = paymentWeiOwed(index);
     payment.weiPaid += owedWei;
     payment.receiver.transfer(owedWei);
@@ -97,8 +86,8 @@ contract Syndicate {
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
     Payment storage payment = payments[index];
-    // Make sure the payment receiver or a delegate is operating
-    requireExecutionAllowed(payment.receiver);
+    // Make sure the payment receiver is operating
+    require(msg.sender == payment.receiver);
 
     uint256 remainingWei = payment.weiValue - payment.weiPaid;
     uint256 remainingTime = max(0, payment.time - (block.timestamp - payment.timestamp));
@@ -123,10 +112,11 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    paymentForks[payments.length - 1] = new uint256[](0);
-    paymentForks[index].push(payments.length - 1);
+    uint256 forkIndex = payments.length - 1;
+    paymentForks[forkIndex] = new uint256[](0);
+    paymentForks[index].push(forkIndex);
     emit PaymentUpdated(index);
-    emit PaymentCreated(payments.length - 1);
+    emit PaymentCreated(forkIndex);
   }
 
   /**
@@ -158,13 +148,6 @@ contract Syndicate {
    **/
   function requirePaymentIndexInRange(uint256 index) public view {
     require(index < payments.length);
-  }
-
-  /**
-   * Checks if msg.sender is allowed to modify payments on behalf of receiver.
-   **/
-  function requireExecutionAllowed(address payable receiver) public view {
-    require(msg.sender == receiver || delegates[receiver][msg.sender] == true);
   }
 
   /**

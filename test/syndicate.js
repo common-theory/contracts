@@ -86,7 +86,7 @@ contract('Syndicate', accounts => {
     assert.ok(await contract.methods.isPaymentSettled(paymentIndex));
   });
 
-  it('should fail to settle if not receiver', async () => {
+  it('should settle if not receiver', async () => {
     const _contract = await Syndicate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const owner = accounts[0];
@@ -99,10 +99,10 @@ contract('Syndicate', accounts => {
       gas: DEFAULT_GAS
     });
     const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
+    await contract.methods.paymentSettle(paymentIndex).send({
       from: owner,
       gas: DEFAULT_GAS
-    }));
+    });
     await contract.methods.paymentSettle(paymentIndex).send({
       from: receiver,
       gas: DEFAULT_GAS
@@ -277,68 +277,6 @@ contract('Syndicate', accounts => {
     assert.ok(+updatedForkCount === 1);
     const paymentForkIndex = await contract.methods.paymentForks(paymentIndex, 0).call();
     assert.ok(+paymentForkIndex, forkIndex)
-  });
-
-  it('should delegate forking ability', async () => {
-    const _contract = await Syndicate.deployed();
-    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const owner = accounts[0];
-    const delegate = accounts[1];
-    const weiValue = 5000;
-    const time = 100;
-    await contract.methods.delegate(delegate, false).send({
-      from: owner,
-      gas: DEFAULT_GAS
-    });
-    await contract.methods.paymentCreate(owner, time).send({
-      from: owner,
-      value: weiValue,
-      gas: DEFAULT_GAS
-    });
-    const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    await assert.rejects(contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
-      from: delegate,
-      gas: 500000
-    }));
-    await contract.methods.delegate(delegate, true).send({
-      from: owner,
-      gas: DEFAULT_GAS
-    });
-    await contract.methods.paymentFork(paymentIndex, owner, weiValue / 2).send({
-      from: delegate,
-      gas: 500000
-    });
-  });
-
-  it('should delegate settlement ability', async () => {
-    const _contract = await Syndicate.deployed();
-    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const owner = accounts[0];
-    const delegate = accounts[1];
-    const weiValue = 5000;
-    const time = 100;
-    await contract.methods.delegate(delegate, false).send({
-      from: owner,
-      gas: DEFAULT_GAS
-    });
-    await contract.methods.paymentCreate(owner, time).send({
-      from: owner,
-      value: weiValue,
-      gas: DEFAULT_GAS
-    });
-    const paymentIndex = await contract.methods.paymentCount().call() - 1;
-    await assert.rejects(contract.methods.paymentSettle(paymentIndex).send({
-      from: delegate,
-      gas: DEFAULT_GAS
-    }));
-    await contract.methods.delegate(delegate, true).send({
-      from: owner,
-      gas: DEFAULT_GAS
-    });
-    await contract.methods.paymentSettle(paymentIndex).send({
-      from: delegate,
-      gas: DEFAULT_GAS
-    });
   });
 
 });

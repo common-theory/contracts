@@ -22,9 +22,9 @@ A Syndicate can be used to send a payment over time to an Ethereum address. Bala
 
 Once a payment has been initiated the recipient is able to fork some (or all) of the remaining payment to other addresses. A payment is delegation of responsibility for funds over time.
 
-When a payment is forked the remaining balance is split to two new payments; one to the original recipient, one to the fork target. Child payments complete at the same time as the parent payment, and can be forked again.
+When a payment is forked the original payment `weiValue` is subtracted by the amount being forked. A new payment is created with the desired amount of `weiValue` and a completion time equal to that of the original payment. The forked payment may itself be forked.
 
-Each payment can be represented as a node in a [**full** binary tree](https://en.wikipedia.org/wiki/Binary_tree#Types_of_binary_trees).
+Each payment can be represented as a tree with nodes being individual payments. All payments in a given tree will complete at the same time.
 
 ### Delegation
 

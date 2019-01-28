@@ -112,10 +112,11 @@ contract Syndicate {
       isFork: true,
       parentIndex: index
     }));
-    paymentForks[payments.length - 1] = new uint256[](0);
-    paymentForks[index].push(payments.length - 1);
+    uint256 forkIndex = payments.length - 1;
+    paymentForks[forkIndex] = new uint256[](0);
+    paymentForks[index].push(forkIndex);
     emit PaymentUpdated(index);
-    emit PaymentCreated(payments.length - 1);
+    emit PaymentCreated(forkIndex);
   }
 
   /**

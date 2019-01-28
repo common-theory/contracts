@@ -26,10 +26,6 @@ When a payment is forked the original payment `weiValue` is subtracted by the am
 
 Each payment can be represented as a tree with nodes being individual payments. All payments in a given tree will complete at the same time.
 
-### Delegation
-
-The Syndicate includes a `delegate` function that allows an address to delegate the ability to fork and withdraw payments. Forks can be made to any address; withdrawals always go to the payment recipient.
-
 #### Proof
 
 Unit tests cover all functions and logical paths, see the latest build log [here](https://travis-ci.org/common-theory/contracts). Mathematical proofs of functions can be found [here](https://github.com/common-theory/contracts/blob/master/proofs).

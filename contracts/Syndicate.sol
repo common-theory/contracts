@@ -17,12 +17,10 @@ contract Syndicate {
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
-    bool isForked;
-    uint256 fork1Index;
-    uint256 fork2Index;
   }
 
   Payment[] public payments;
+  mapping(uint256 => uint256[]) public paymentForks;
 
   event PaymentUpdated(uint256 index);
   event PaymentCreated(uint256 index);
@@ -53,11 +51,9 @@ contract Syndicate {
       weiValue: msg.value,
       weiPaid: 0,
       isFork: false,
-      parentIndex: 0,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
+      parentIndex: 0
     }));
+    paymentForks[payments.length - 1] = new uint256[](0);
     emit PaymentCreated(payments.length - 1);
   }
 
@@ -97,8 +93,6 @@ contract Syndicate {
    *
    * Payments can be forked until weiValue is 0, at which point the Payment is
    * settled. Child payments can also be forked.
-   *
-   * The genealogy of a payment can be represented as a binary tree.
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
@@ -115,9 +109,10 @@ contract Syndicate {
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of
     // payment at index
-    payment.weiValue = payment.weiPaid;
-    emit PaymentUpdated(index);
 
+    payment.weiValue -= _weiValue;
+
+    // Now create the forked payment
     payments.push(Payment({
       sender: payment.receiver,
       receiver: _receiver,
@@ -126,31 +121,28 @@ contract Syndicate {
       weiValue: _weiValue,
       weiPaid: 0,
       isFork: true,
-      parentIndex: index,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
+      parentIndex: index
     }));
-    payment.fork1Index = payments.length - 1;
+    paymentForks[payments.length - 1] = new uint256[](0);
+    paymentForks[index].push(payments.length - 1);
+    emit PaymentUpdated(index);
     emit PaymentCreated(payments.length - 1);
+  }
 
-    payments.push(Payment({
-      sender: payment.receiver,
-      receiver: payment.receiver,
-      timestamp: block.timestamp,
-      time: remainingTime,
-      weiValue: remainingWei - _weiValue,
-      weiPaid: 0,
-      isFork: true,
-      parentIndex: index,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
-    }));
-    payment.fork2Index = payments.length - 1;
-    emit PaymentCreated(payments.length - 1);
+  /**
+   * Accessor for determining if a given payment has any forks.
+   **/
+  function isPaymentForked(uint256 index) public view returns (bool) {
+    requirePaymentIndexInRange(index);
+    return paymentForks[index].length > 0;
+  }
 
-    payment.isForked = true;
+  /**
+   * Accessor for payment fork count.
+   **/
+  function paymentForkCount(uint256 index) public view returns (uint256) {
+    requirePaymentIndexInRange(index);
+    return paymentForks[index].length;
   }
 
   /**

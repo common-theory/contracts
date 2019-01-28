@@ -94,8 +94,6 @@ contract Syndicate {
    *
    * Payments can be forked until weiValue is 0, at which point the Payment is
    * settled. Child payments can also be forked.
-   *
-   * The genealogy of a payment can be represented as a binary tree.
    **/
   function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) public {
     requirePaymentIndexInRange(index);
@@ -134,7 +132,7 @@ contract Syndicate {
   }
 
   /**
-   * Accessor for determining if a given payment is fully settled.
+   * Accessor for determining if a given payment has any forks.
    **/
   function isPaymentForked(uint256 index) public view returns (bool) {
     requirePaymentIndexInRange(index);

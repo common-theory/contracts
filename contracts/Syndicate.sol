@@ -17,9 +17,7 @@ contract Syndicate {
     uint256 weiPaid;
     bool isFork;
     uint256 parentIndex;
-    bool isForked;
-    uint256 fork1Index;
-    uint256 fork2Index;
+    uint256[] forks;
   }
 
   Payment[] public payments;
@@ -45,6 +43,7 @@ contract Syndicate {
     require(msg.value > 0);
     // Verify the time is non-zero
     require(_time > 0);
+    uint256[] memory _forks;
     payments.push(Payment({
       sender: msg.sender,
       receiver: _receiver,
@@ -54,9 +53,7 @@ contract Syndicate {
       weiPaid: 0,
       isFork: false,
       parentIndex: 0,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
+      forks: _forks
     }));
     emit PaymentCreated(payments.length - 1);
   }
@@ -115,9 +112,11 @@ contract Syndicate {
 
     // Create a new Payment of _weiValue to _receiver over the remaining time of
     // payment at index
-    payment.weiValue = payment.weiPaid;
-    emit PaymentUpdated(index);
 
+    payment.weiValue -= _weiValue;
+
+    // Now create the forked payment
+    uint256[] memory _forks;
     payments.push(Payment({
       sender: payment.receiver,
       receiver: _receiver,
@@ -127,30 +126,19 @@ contract Syndicate {
       weiPaid: 0,
       isFork: true,
       parentIndex: index,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
+      forks: _forks
     }));
-    payment.fork1Index = payments.length - 1;
+    payment.forks.push(payments.length - 1);
+    emit PaymentUpdated(index);
     emit PaymentCreated(payments.length - 1);
+  }
 
-    payments.push(Payment({
-      sender: payment.receiver,
-      receiver: payment.receiver,
-      timestamp: block.timestamp,
-      time: remainingTime,
-      weiValue: remainingWei - _weiValue,
-      weiPaid: 0,
-      isFork: true,
-      parentIndex: index,
-      isForked: false,
-      fork1Index: 0,
-      fork2Index: 0
-    }));
-    payment.fork2Index = payments.length - 1;
-    emit PaymentCreated(payments.length - 1);
-
-    payment.isForked = true;
+  /**
+   * Accessor for determining if a given payment is fully settled.
+   **/
+  function isPaymentForked(uint256 index) public view returns (bool) {
+    requirePaymentIndexInRange(index);
+    return payments[index].forks.length > 0;
   }
 
   /**

@@ -29,7 +29,7 @@ contract Delegate {
 
   function () external payable { }
 
-  modifier delegateOnly() {
+  modifier authorized() {
     require(delegates[msg.sender] == true);
     _;
   }
@@ -37,7 +37,7 @@ contract Delegate {
   /// @notice Set whether an address can control the contract.
   /// @param _delegate The address to be updated
   /// @param _delegated Whether the address should have execution privileges
-  function delegate(address _delegate, bool _delegated) public delegateOnly {
+  function delegate(address _delegate, bool _delegated) public authorized {
     delegates[_delegate] = _delegated;
   }
 
@@ -45,7 +45,7 @@ contract Delegate {
   /// @param weiValue The amount of wei to send
   /// @param receiver The address to receive the payment
   /// @param time The number of seconds the payment should be made over
-  function paymentCreate(uint256 weiValue, address payable receiver, uint256 time) public delegateOnly {
+  function paymentCreate(uint256 weiValue, address payable receiver, uint256 time) public authorized {
     require(weiValue <= address(this).balance);
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.paymentCreate.value(weiValue)(receiver, time);
@@ -55,14 +55,14 @@ contract Delegate {
   /// @param index The payment index to be forked
   /// @param receiver The address that should be forked to
   /// @param weiValue The amount of wei to be forked
-  function paymentFork(uint256 index, address payable receiver, uint256 weiValue) public delegateOnly {
+  function paymentFork(uint256 index, address payable receiver, uint256 weiValue) public authorized {
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.paymentFork(index, receiver, weiValue);
   }
 
   /// @notice Withdraw funds from the contract to the caller.
   /// @param weiValue The amount of wei to be withdrawn
-  function withdraw(uint256 weiValue) public delegateOnly {
+  function withdraw(uint256 weiValue) public authorized {
     require(weiValue <= address(this).balance);
     msg.sender.transfer(weiValue);
   }

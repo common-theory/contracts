@@ -1,4 +1,5 @@
 const Delegate = artifacts.require('Delegate');
+const Syndicate = artifacts.require('Syndicate');
 const assert = require('assert');
 const BN = require('bn.js');
 
@@ -48,7 +49,7 @@ contract('Delegate', accounts => {
   /**
    * Ensures failure from non-delegate
    **/
-  it('should fail to create payment from non-delegate', async () => {
+  it('non-delegate should fail to create payment', async () => {
     const _contract = await Delegate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
     const weiValue = 500;
@@ -58,6 +59,46 @@ contract('Delegate', accounts => {
       value: weiValue
     });
     await assert.rejects(contract.methods.paymentCreate(weiValue, accounts[2], 100).send({
+      from: accounts[1],
+      gas: DEFAULT_GAS
+    }));
+  });
+
+  it('should fork payment', async () => {
+    const _syndicate = await Syndicate.deployed();
+    const syndicate = new web3.eth.Contract(_syndicate.abi, _syndicate.address);
+    const _contract = await Delegate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const weiValue = 500;
+
+    // Send a payment to the delegate contract
+    await syndicate.methods.paymentCreate(_contract.address, 100).send({
+      from: accounts[1],
+      value: weiValue,
+      gas: DEFAULT_GAS
+    });
+    const paymentIndex = await syndicate.methods.paymentCount().call() - 1;
+    await contract.methods.paymentFork(paymentIndex, accounts[2], weiValue / 2).send({
+      from: accounts[0],
+      gas: DEFAULT_GAS
+    });
+  });
+
+  it('non-delegate should fail to fork payment', async () => {
+    const _syndicate = await Syndicate.deployed();
+    const syndicate = new web3.eth.Contract(_syndicate.abi, _syndicate.address);
+    const _contract = await Delegate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const weiValue = 500;
+
+    // Send a payment to the delegate contract
+    await syndicate.methods.paymentCreate(_contract.address, 100).send({
+      from: accounts[1],
+      value: weiValue,
+      gas: DEFAULT_GAS
+    });
+    const paymentIndex = await syndicate.methods.paymentCount().call() - 1;
+    await assert.rejects(contract.methods.paymentFork(paymentIndex, accounts[2], weiValue / 2).send({
       from: accounts[1],
       gas: DEFAULT_GAS
     }));

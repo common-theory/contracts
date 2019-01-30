@@ -32,10 +32,6 @@ A Delegate contract can interact with Syndicate payments on behalf of a user. Mu
 
 This can be used for receiving and sending payments to avoid individual addresses being entrusted with large stores of value. It also allows for cold generated addresses to receive and control value.
 
-#### Proof
-
-Unit tests cover all functions and logical paths, see the latest build log [here](https://travis-ci.org/common-theory/contracts). Mathematical proofs of functions can be found [here](https://github.com/common-theory/contracts/blob/master/proofs).
-
 ## Common Interest
 
 A Syndicate can be used to coordinate funds between humans. Syndicate users should embody the opposite of the connotation and promote productivity and wellness (physically and mentally) in the beings involved.

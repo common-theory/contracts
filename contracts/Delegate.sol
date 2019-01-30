@@ -34,21 +34,34 @@ contract Delegate {
     _;
   }
 
+  /// @notice Set whether an address can control the contract.
+  /// @param _delegate The address to be updated
+  /// @param _delegated Whether the address should have execution privileges
   function delegate(address _delegate, bool _delegated) public delegateOnly {
     delegates[_delegate] = _delegated;
   }
 
+  /// @notice Creates a payment from the contract to an address.
+  /// @param weiValue The amount of wei to send
+  /// @param receiver The address to receive the payment
+  /// @param time The number of seconds the payment should be made over
   function paymentCreate(uint256 weiValue, address payable receiver, uint256 time) public delegateOnly {
     require(weiValue <= address(this).balance);
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.paymentCreate.value(weiValue)(receiver, time);
   }
 
+  /// @notice Forks a payment being received by the contract.
+  /// @param index The payment index to be forked
+  /// @param receiver The address that should be forked to
+  /// @param weiValue The amount of wei to be forked
   function paymentFork(uint256 index, address payable receiver, uint256 weiValue) public delegateOnly {
     Syndicate syndicate = Syndicate(syndicateAddress);
     syndicate.paymentFork(index, receiver, weiValue);
   }
 
+  /// @notice Withdraw funds from the contract to the caller.
+  /// @param weiValue The amount of wei to be withdrawn
   function withdraw(uint256 weiValue) public delegateOnly {
     require(weiValue <= address(this).balance);
     msg.sender.transfer(weiValue);

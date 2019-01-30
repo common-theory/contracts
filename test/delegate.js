@@ -46,6 +46,22 @@ contract('Delegate', accounts => {
     });
   });
 
+  it('should fail to create payment more than balance', async () => {
+    const _contract = await Delegate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    const weiValue = 500;
+    await web3.eth.sendTransaction({
+      from: accounts[1],
+      to: _contract.address,
+      value: weiValue
+    });
+    const balance = await web3.eth.getBalance(_contract.address);
+    await assert.rejects(contract.methods.paymentCreate(balance + 1, accounts[2], 100).send({
+      from: accounts[0],
+      gas: DEFAULT_GAS
+    }));
+  });
+
   /**
    * Ensures failure from non-delegate
    **/
@@ -122,8 +138,8 @@ contract('Delegate', accounts => {
   it('should fail to withdraw more than balance', async () => {
     const _contract = await Delegate.deployed();
     const contract = new web3.eth.Contract(_contract.abi, _contract.address);
-    const balance = await web3.eth.getBalance(_contract.address) + 100;
-    await assert.rejects(contract.methods.withdraw(balance).send({
+    const balance = await web3.eth.getBalance(_contract.address);
+    await assert.rejects(contract.methods.withdraw(balance + 1).send({
       from: accounts[0],
       gas: DEFAULT_GAS
     }));

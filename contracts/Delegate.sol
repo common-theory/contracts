@@ -43,8 +43,4 @@ contract Delegate {
     require(weiValue <= address(this).balance);
     msg.sender.transfer(weiValue);
   }
-
-  function withdraw() public delegateOnly {
-    withdraw(address(this).balance);
-  }
 }

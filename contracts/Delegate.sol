@@ -1,6 +1,16 @@
 pragma solidity ^0.5.0;
 
-import './Syndicate.sol';
+interface Syndicate {
+  function paymentCreate(address payable _receiver, uint256 _time) external payable;
+  function paymentSettle(uint256 index) external;
+  function paymentWeiOwed(uint256 index) external view returns (uint256);
+  function paymentFork(uint256 index, address payable _receiver, uint256 _weiValue) external;
+  function isPaymentForked(uint256 index) external view returns (bool);
+  function paymentForkCount(uint256 index) external view returns (uint256);
+  function isPaymentSettled(uint256 index) external view returns (bool);
+  function requirePaymentIndexInRange(uint256 index) external view;
+  function paymentCount() external view returns (uint256);
+}
 
 /// @title A way to allow multiple addresses to control funds
 /// @author Chance Hudson

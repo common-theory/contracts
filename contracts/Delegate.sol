@@ -18,7 +18,7 @@ interface Syndicate {
 /// funds locked in a contract. Helpful for allowing a cold storage key to
 /// have control of funds.
 contract Delegate {
-  address payable public syndicateAddress;
+  address public syndicateAddress;
 
   mapping (address => bool) public delegates;
 

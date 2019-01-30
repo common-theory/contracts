@@ -8,9 +8,9 @@ import './Syndicate.sol';
 /// funds locked in a contract. Helpful for allowing a cold storage key to
 /// have control of funds.
 contract Delegate {
-  address payable syndicateAddress;
+  address payable public syndicateAddress;
 
-  mapping (address => bool) delegates;
+  mapping (address => bool) public delegates;
 
   constructor(address payable _syndicateAddress) public {
     syndicateAddress = _syndicateAddress;

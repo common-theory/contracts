@@ -144,4 +144,26 @@ contract('Delegate', accounts => {
     }));
   });
 
+  it('should add delegate', async () => {
+    const _contract = await Delegate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    await contract.methods.delegate(accounts[1], true).send({
+      from: accounts[0],
+      gas: DEFAULT_GAS
+    });
+    await contract.methods.delegate(accounts[1], false).send({
+      from: accounts[0],
+      gas: DEFAULT_GAS
+    });
+  });
+
+  it('non-delegate should fail to add delegate', async () => {
+    const _contract = await Delegate.deployed();
+    const contract = new web3.eth.Contract(_contract.abi, _contract.address);
+    await assert.rejects(contract.methods.delegate(accounts[2], true).send({
+      from: accounts[1],
+      gas: DEFAULT_GAS
+    }));
+  });
+
 });

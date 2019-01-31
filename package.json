@@ -16,7 +16,7 @@
     "test": "truffle test"
   },
   "author": "Chance Hudson",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "devDependencies": {
     "@types/node": "^10.12.18",
     "@types/web3": "^1.0.14",

@@ -26,9 +26,11 @@ When a payment is forked the original payment `weiValue` is subtracted by the am
 
 Each payment can be represented as a tree with nodes being individual payments. All payments in a given tree will complete at the same time.
 
-#### Proof
+## Delegate
 
-Unit tests cover all functions and logical paths, see the latest build log [here](https://travis-ci.org/common-theory/contracts). Mathematical proofs of functions can be found [here](https://github.com/common-theory/contracts/blob/master/proofs).
+A Delegate contract can interact with Syndicate payments on behalf of a user. Multiple addresses can be authorized in a delegate contract.
+
+This can be used for receiving and sending payments to avoid individual addresses being entrusted with large stores of value. It also allows for cold generated addresses to receive and control value.
 
 ## Common Interest
 
